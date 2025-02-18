@@ -22,3 +22,6 @@ via [_model categories_](https://ncatlab.org/nlab/show/model+category). You can 
 [here](/academic-cv.pdf).
 
 Feel free to explore my blog and connect with me. I'm always eager to exchange some cool ideas.
+
+> - E-mail address: You can find my personal e-mail address in many of my source code files.
+> - GPG key fingerprint: 8BF8 8B44 D523 0D2A E962  90F9 B3BF 2347 CFC0 4ADF
