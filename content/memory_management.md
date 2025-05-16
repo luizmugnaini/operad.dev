@@ -27,7 +27,7 @@ collector approach?
 
 # Building your own memory system
 
-When writing any API, one should question itself the scope and the audience of the API. In the case
+When writing any API, one should question himself the scope and the audience of the API. In the case
 of a memory management system, the main concern is centred in memory safety. How much safety guard-rails
 should we build, and how much hand-holding does our end-user need?
 
