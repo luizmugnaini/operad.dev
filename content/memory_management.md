@@ -10,7 +10,7 @@ In this post, I'll be detailing how C and C++ can be programmed in a sane and me
 be going through some custom memory allocator strategies that provide simple ways of dissolving
 common memory problems.
 
-This post is inspired by my C++ core library called [Presheaf](https://git.sr.ht/~presheaf/presheaf),
+This post is inspired by my C++ core library called [Presheaf](https://git.sr.ht/~presheaf/presheaf-lib),
 whose source code is freely available. The main goal of the library is to deliver the programming
 experience I wanted and C wasn't able to fully deliver.
 
