@@ -40,7 +40,7 @@ read request to be checked if ID's match, etc.
 
 In my personal case I don't really need all of this hand-holding and training-wheels. All I need is
 a performant system that can be easily managed, and ensures some level of memory safety. The
-[Presheaf library](https://git.sr.ht/~presheaf/presheaf) leans into this very philosophy -
+[Presheaf library](https://git.sr.ht/~presheaf/presheaf-lib) leans into this very philosophy -
 obvious protocols exist between caller and callee, if the caller wants to break one of the these
 protocol assumptions, the callee won't try to stop the caller fearing stupidity of the programmer.
 In summary, the programmer is always treated as an intelligent being that knows what they are doing.
@@ -188,7 +188,7 @@ uint8_t* arena_alloc_align(Arena* arena, size_t size_bytes, uint32_t alignment) 
         return nullptr;
     }
 
-    uintptr_t memory_addr    = reinterpret_cast<uintptr_t>(arena->buf);
+    uintptr_t memory_addr    = (uintptr_t)arena->buf;
     uintptr_t new_block_addr = align_forward(memory_addr + arena->offset, alignment);
 
     if (new_block_addr + size_bytes > arena->capacity + memory_addr) {
@@ -197,9 +197,9 @@ uint8_t* arena_alloc_align(Arena* arena, size_t size_bytes, uint32_t alignment) 
     }
 
     // Commit the new block of memory.
-    arena->offset = static_cast<size_t>(size_bytes + new_block_addr - memory_addr);
+    arena->offset = (size_t)(size_bytes + new_block_addr - memory_addr);
 
-    uint8_t* new_block = reinterpret_cast<uint8_t*>(new_block_addr);
+    uint8_t* new_block = (uint8_t*)new_block_addr;
     memset(new_block, 0, size_bytes);
 
     return new_block;
@@ -375,7 +375,7 @@ uint8_t* stack_alloc_align(Stack* stack, size_t size_bytes, uint32_t alignment) 
     uint8_t* free_memory = stack->buf + current_offset;
 
     size_t padding = padding_with_header(
-        reinterpret_cast<uintptr_t>(free_memory),
+        (uintptr_t)free_memory,
         alignment,
         sizeof(StackHeader),
         alignof(StackHeader));
@@ -388,7 +388,7 @@ uint8_t* stack_alloc_align(Stack* stack, size_t size_bytes, uint32_t alignment) 
     uint8_t* new_block = free_memory + padding;
 
     // Write to the header associated with the new block of memory.
-    StackHeader* new_header     = reinterpret_cast<StackHeader*>(new_block - sizeof(StackHeader));
+    StackHeader* new_header     = (StackHeader*)(new_block - sizeof(StackHeader));
     new_header->padding         = padding;
     new_header->capacity        = size_bytes;
     new_header->previous_offset = stack->previous_offset;
@@ -414,9 +414,7 @@ Most of the time, all that you need is an arena. You can also combine the use of
 stack allocator for more intricate memory arrangements.
 
 If you wish to see the actual implementation of these allocators in the Presheaf library, please
-refer to the [source code](https://git.sr.ht/~presheaf/presheaf). The code written in this post
-has a very C-like touch, which was intentional with the purpose of offloading any complexities and
-making it very easy to port the code to C.
+refer to the [source code](https://git.sr.ht/~presheaf/presheaf-lib).
 
 # Further reading material for the nerds
 

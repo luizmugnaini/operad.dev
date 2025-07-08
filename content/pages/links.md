@@ -31,15 +31,23 @@ and find cool content? Let's bring this culture back! Here is my little contribu
 - [Molecular Matters blog](https://blog.molecular-matters.com/).
 - [Wicked Engine's devblog](https://wickedengine.net/category/devblog/).
 - [Randy's list](https://randy.gg/res/), yet another list of cool resources for you to browse.
-- [Easing functions](https://easings.net) is a good reference of smooth interval interpolation
-  functions to have around.
+- [Drew DeVault's blog](https://drewdevault.com/).
+- [Fabian 'Ryg' Giesen's blog](https://fgiesen.wordpress.com), a wizard from RAD tools and the demoscene days.
+- [Andreas Fredriksson's blog](https://deplinenoise.wordpress.com). Seems to be stale unfortunately,
+  but has many posts packed with knowledge.
+- [Red Blob Games](https://www.redblobgames.com/), from Amid Patel. I recommend the posts about
+  terrain generation, really good stuff.
+- [Arseny Kapoulkine's blog](https://zeux.io), computer graphics and stuff.
+- [Bartosz Taudul's blog](https://wolf.nereid.pl), creator of the Tracy frame profiler and other
+  good tools.
+- [Ignacio Castaño's blog](https://www.ludicon.com/castano/blog/) on texture compression, graphics and game development.
 
 <!-- I can't recommend these since I haven't read them myself. Storing them here for later reference.
 
 # Graphics
 
 - [Collection of intersector functions for common primitive types](https://iquilezles.org/articles/intersectors/).
-- [Path Tracing – Getting Started With Diffuse and Emissive](https://blog.demofox.org/2016/09/21/path-tracing-getting-started-with-diffuse-and-emissive/).
+- [Path Tracing - Getting Started With Diffuse and Emissive](https://blog.demofox.org/2016/09/21/path-tracing-getting-started-with-diffuse-and-emissive/).
 - [Raytracing Reflection, Refraction, Fresnel, Total Internal Reflection, and Beer’s Law](https://blog.demofox.org/2017/01/09/raytracing-reflection-refraction-fresnel-total-internal-reflection-and-beers-law/).
 - [Casual Shadertoy Path Tracing 3: Fresnel, Rough Refraction & Absorption, Orbit Camera](https://blog.demofox.org/2020/06/14/casual-shadertoy-path-tracing-3-fresnel-rough-refraction-absorption-orbit-camera/)
 - [smallpt](http://www.kevinbeason.com/smallpt/)

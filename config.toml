@@ -1,9 +1,12 @@
-# The URL the site will be built for
 base_url = "https://presheaf.dev"
 title = "mug's blog"
 
 # Whether to automatically compile all Sass files in the sass directory
 compile_sass = true
+
+# RSS support.
+generate_feed = true
+feed_filename = "rss.xml"
 
 theme = "terminimal"
 

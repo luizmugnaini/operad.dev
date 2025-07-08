@@ -35,7 +35,7 @@ in mathematics, and for that I'm profoundly grateful. For this exact reason I
 thought of making _Deep Dive_ available for anyone that might be interested in
 this kind of writing.
 
-The source of _Deep Dive_ is available on my GitHub at [luizmugnaini/deep-dive](https://git.sr.ht/~presheaf/deep-dive).
+The source of _Deep Dive_ is available at [here](https://git.sr.ht/~presheaf/deep-dive).
 Additionally, a compiled version of the document can be found [here](/deep-dive.pdf).
 Please note that this document may be frequently out of date.
 
