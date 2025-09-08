@@ -83,30 +83,25 @@ alignment of each struct member is valid. Thus in reality, the arrangement of by
 struct Foo {
     uint8_t* memory;             // 8 bytes.
     uint32_t allocation_count;   // 4 bytes.
-    // ---------------------------> Invisible padding of 4 bytes.
+    uint8_t  padding1[4];        // Inserted padding of 4 bytes.
     double   some_metric;        // 8 bytes.
     float    some_other_metric;  // 4 bytes.
-    // ---------------------------> Invisible padding of 4 bytes.
+    uint8_t  padding2[4];        // Inserted padding of 4 bytes.
 };
 ```
 
 Notice how we're wasting 8 bytes of memory for each instance of our struct.
 
-But really, why does the compiler put those paddings between our members? For the sake of
-contradiction, suppose that the compiler didn't put those padding bytes. If we wanted to access the
-member `Foo::some_metric` (which has an alignment of 8 bytes), we would start to read `Foo` in the
-same address as the first member - then we would advance by our alignment of 8 bytes at a time until
-we supposedly reach `Foo::some_metric`. Surprise! We won't be able to reach our destination, in
-fact, we would've passed the address of the target by 4 bytes. For this exact reason, the compiler
-has to arrange memory for the worst case scenario - the largest alignment in the collection of
-members has to be the global alignment of the structure itself. In our case, the compiler sees that
-the largest alignment is 8 bytes.
+But really, why does the compiler insert padding between struct members? Most modern CPU
+architectures require data to be aligned according to its size. Misaligned access can lead to
+performance penalties on some platforms (like x86), and in other cases it can even cause hardware
+exceptions to be thrown.
 
-One thing I didn't explain is why the compiler has to put those 4 bytes of padding after
-the last structure member. If for some reason you have a contiguous array of `Foo` instances, in
-order to traverse through the array we would use the alignment of `Foo` (8 bytes) - and if it wasn't
-for those last 4 bytes, we wouldn't reach the next `Foo` in the line! Once again, the compiler has to
-account for the worst case scenario.
+One thing I didn't explain is why the compiler has to put those 4 bytes of padding after the last
+structure member. If for some reason you have a contiguous array of `Foo` instances, in order to
+traverse through the array we would use the alignment of `Foo` (8 bytes) - and if it wasn't for
+those last 4 bytes, the address of the next `Foo` instance would be misaligned! Once again, the
+compiler has to account for the worst case scenario.
 
 Fixing our bad memory usage is simple, we just rearrange the members taking into account their
 sizes:
