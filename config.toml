@@ -1,12 +1,13 @@
 base_url = "https://presheaf.dev"
-title = "mug's blog"
+title = "Mugnaini's blog"
 
 # Whether to automatically compile all Sass files in the sass directory
 compile_sass = true
 
 # RSS support.
-generate_feed = true
-feed_filename = "rss.xml"
+# generate_feeds = true
+# feed_filenames = ["rss.xml"]
+# feed_filename = "rss.xml"
 
 theme = "terminimal"
 
@@ -32,7 +33,7 @@ highlight_theme = "one-dark"
 accent_color = "pink"
 background_color = "blue"
 
-logo_text = "mug's blog"
+logo_text = "Mugnaini's blog"
 
 author = "Luiz Mugnaini"
 
@@ -40,9 +41,10 @@ author = "Luiz Mugnaini"
 menu_items = [
     {name = "blog", url = "$BASE_URL"},
     {name = "about", url = "$BASE_URL/about"},
+    {name = "cv", url = "/cv.pdf", newtab = true},
+    {name = "code", url = "https://git.sr.ht/~presheaf", newtab = true},
     {name = "tags", url = "$BASE_URL/tags"},
     {name = "archive", url = "$BASE_URL/archive"},
-    {name = "code", url = "https://git.sr.ht/~presheaf", newtab = true},
     {name = "misc", url = "$BASE_URL/misc"},
 ]
 

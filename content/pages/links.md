@@ -41,6 +41,8 @@ and find cool content? Let's bring this culture back! Here is my little contribu
 - [Bartosz Taudul's blog](https://wolf.nereid.pl), creator of the Tracy frame profiler and other
   good tools.
 - [Ignacio Castaño's blog](https://www.ludicon.com/castano/blog/) on texture compression, graphics and game development.
+- [Andreas Fredriksson's blog](https://deplinenoise.wordpress.com/). This is a stale blog as far as I know, but there are interesting posts there.
+- [Bartoz Taudul's blog](https://wolf.nereid.pl), the creator of the Tracy frame profiler.
 
 <!-- I can't recommend these since I haven't read them myself. Storing them here for later reference.
 
