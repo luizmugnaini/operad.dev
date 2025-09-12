@@ -7,6 +7,7 @@ path = "misc"
 Remember when personal websites had lists of selected links that you could use to navigate the web
 and find cool content? Let's bring this culture back! Here is my little contribution to that:
 
+# Programming
 
 - [Casey Muratori's blog](https://caseymuratori.com/contents). I specially recommend reading the
   [Semantic Compression](https://caseymuratori.com/blog_0015) post.
@@ -41,8 +42,21 @@ and find cool content? Let's bring this culture back! Here is my little contribu
 - [Bartosz Taudul's blog](https://wolf.nereid.pl), creator of the Tracy frame profiler and other
   good tools.
 - [Ignacio Castaño's blog](https://www.ludicon.com/castano/blog/) on texture compression, graphics and game development.
-- [Andreas Fredriksson's blog](https://deplinenoise.wordpress.com/). This is a stale blog as far as I know, but there are interesting posts there.
+- [Andreas Fredriksson's blog](https://deplinenoise.wordpress.com/). This is a stale blog as far as
+  I know, but there are interesting posts there.
 - [Bartoz Taudul's blog](https://wolf.nereid.pl), the creator of the Tracy frame profiler.
+
+# Researchers
+
+- [Keenan Crane](https://www.cs.cmu.edu/~kmcrane/), mostly working on computer graphics, discrete
+  differential geometry and related topics.
+- [Jacob Lurie](https://www.math.ias.edu/~lurie/), mostly working on algebraic topology and homotopy
+  theory.
+- [Peter Haine](https://peterjhaine.github.io/), mostly working on homotopy theory, algebraic
+  geometry, and related topics.
+- [Arun Debray](https://adebray.github.io/), mostly working on algebraic topology with an eye
+  towards quantum field theory and condensed-matter physics.
+- [Ravi Vakil](https://virtualmath1.stanford.edu/~vakil/), mostly working on algebraic geometry.
 
 <!-- I can't recommend these since I haven't read them myself. Storing them here for later reference.
 
