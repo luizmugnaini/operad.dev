@@ -53,7 +53,10 @@ and find cool content? Let's bring this culture back! Here is my little contribu
   differential geometry and related topics.
 - [Mathieu Desbrun](https://pages.saclay.inria.fr/mathieu.desbrun/), mostly working on computer
   graphics and geometry processing.
-- [Fernando de Goes](https://fdegoes.github.io/), mostly working on geometry processing and computational physics.
+- [Fernando de Goes](https://fdegoes.github.io/), mostly working on geometry processing and
+  computational physics.
+- [Albert Chern](https://cseweb.ucsd.edu/~alchern/), mostly working on geometry processing and
+  physics simulation.
 - [Jacob Lurie](https://www.math.ias.edu/~lurie/), mostly working on algebraic topology and homotopy
   theory.
 - [Brian Conrad](https://virtualmath1.stanford.edu/~conrad/), mostly working on number theory,
