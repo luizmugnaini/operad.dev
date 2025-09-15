@@ -56,6 +56,8 @@ and find cool content? Let's bring this culture back! Here is my little contribu
 - [Fernando de Goes](https://fdegoes.github.io/), mostly working on geometry processing and computational physics.
 - [Jacob Lurie](https://www.math.ias.edu/~lurie/), mostly working on algebraic topology and homotopy
   theory.
+- [Brian Conrad](https://virtualmath1.stanford.edu/~conrad/), mostly working on number theory,
+  arithmetic geometry, and algebraic geometry.
 - [Peter Haine](https://peterjhaine.github.io/), mostly working on homotopy theory, algebraic
   geometry, and related topics.
 - [Arun Debray](https://adebray.github.io/), mostly working on algebraic topology with an eye
