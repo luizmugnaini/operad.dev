@@ -41,7 +41,8 @@ and find cool content? Let's bring this culture back! Here is my little contribu
 - [Arseny Kapoulkine's blog](https://zeux.io), computer graphics and stuff.
 - [Bartosz Taudul's blog](https://wolf.nereid.pl), creator of the Tracy frame profiler and other
   good tools.
-- [Ignacio Castaño's blog](https://www.ludicon.com/castano/blog/) on texture compression, graphics and game development.
+- [Ignacio Castaño's blog](https://www.ludicon.com/castano/blog/) on texture compression, graphics
+  and game development.
 - [Andreas Fredriksson's blog](https://deplinenoise.wordpress.com/). This is a stale blog as far as
   I know, but there are interesting posts there.
 - [Bartoz Taudul's blog](https://wolf.nereid.pl), the creator of the Tracy frame profiler.
@@ -50,6 +51,9 @@ and find cool content? Let's bring this culture back! Here is my little contribu
 
 - [Keenan Crane](https://www.cs.cmu.edu/~kmcrane/), mostly working on computer graphics, discrete
   differential geometry and related topics.
+- [Mathieu Desbrun](https://pages.saclay.inria.fr/mathieu.desbrun/), mostly working on computer
+  graphics and geometry processing.
+- [Fernando de Goes](https://fdegoes.github.io/), mostly working on geometry processing and computational physics.
 - [Jacob Lurie](https://www.math.ias.edu/~lurie/), mostly working on algebraic topology and homotopy
   theory.
 - [Peter Haine](https://peterjhaine.github.io/), mostly working on homotopy theory, algebraic
