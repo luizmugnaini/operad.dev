@@ -22,7 +22,7 @@ to emulation software.
 
 <!-- more -->
 
-The heart of [`chirp`](https://git.sr.ht/~presheaf/chirp) is an interpreter of
+The heart of [`chirp`](https://git.sr.ht/~luizmugnaini/chirp) is an interpreter of
 the CHIP-8 programming language, with roots in the early days of game
 development. This project can serve as a learning material for someone
 interested in dipping their toes in low-level waters.

@@ -10,7 +10,7 @@ In this post, I'll be detailing how C and C++ can be programmed in a sane and me
 be going through some custom memory allocator strategies that provide simple ways of dissolving
 common memory problems.
 
-This post is inspired by my C++ core library called [Presheaf](https://git.sr.ht/~presheaf/presheaf-lib),
+This post is inspired by my [C++ core library](https://git.sr.ht/~luizmugnaini/runtime),
 whose source code is freely available. The main goal of the library is to deliver the programming
 experience I wanted and C wasn't able to fully deliver.
 
@@ -40,7 +40,7 @@ read request to be checked if ID's match, etc.
 
 In my personal case I don't really need all of this hand-holding and training-wheels. All I need is
 a performant system that can be easily managed, and ensures some level of memory safety. The
-[Presheaf library](https://git.sr.ht/~presheaf/presheaf-lib) leans into this very philosophy -
+[runtime library](https://git.sr.ht/~luizmugnaini/runtime) leans into this very philosophy -
 obvious protocols exist between caller and callee, if the caller wants to break one of the these
 protocol assumptions, the callee won't try to stop the caller fearing stupidity of the programmer.
 In summary, the programmer is always treated as an intelligent being that knows what they are doing.
@@ -303,7 +303,7 @@ memory                         previous                  end
 ```
 
 The allocator can be either the owner or merely the manager of the memory pointed by `Stack::memory`.
-In Presheaf I opted for using allocators as mere managers, so you need to initialise them with a
+In my runtime, I opted for using allocators as mere managers, so you need to initialise them with a
 valid pointer to a previously allocated block of memory.
 
 ## Allocating Blocks
@@ -408,8 +408,8 @@ system frees you from dealing with individual lifetimes, ownership problems, and
 Most of the time, all that you need is an arena. You can also combine the use of the arena with a
 stack allocator for more intricate memory arrangements.
 
-If you wish to see the actual implementation of these allocators in the Presheaf library, please
-refer to the [source code](https://git.sr.ht/~presheaf/presheaf-lib).
+If you wish to see the actual implementation of these allocators in my runtime library, please
+refer to the [source code](https://git.sr.ht/~luizmugnaini/runtime).
 
 # Further reading material for the nerds
 
