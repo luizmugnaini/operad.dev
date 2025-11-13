@@ -7,10 +7,9 @@ path = "misc"
 Remember when personal websites had lists of selected links that you could use to navigate the web
 and find cool content? Let's bring this culture back! Here is my little contribution to that:
 
-# Programming
+# Programming Blogs
 
-- [Casey Muratori's blog](https://caseymuratori.com/contents). I specially recommend reading the
-  [Semantic Compression](https://caseymuratori.com/blog_0015) post.
+- [Casey Muratori's blog](https://caseymuratori.com/contents).
 - Handmade Hero [episode guide](https://guide.handmadehero.org/code/), absolutely amazing series
   building a game from the ground up - made by Casey Muratori.
 - [Computer, Enhance!](https://www.computerenhance.com) Another project from Casey Muratori,
@@ -39,13 +38,11 @@ and find cool content? Let's bring this culture back! Here is my little contribu
 - [Red Blob Games](https://www.redblobgames.com/), from Amid Patel. I recommend the posts about
   terrain generation, really good stuff.
 - [Arseny Kapoulkine's blog](https://zeux.io), computer graphics and stuff.
-- [Bartosz Taudul's blog](https://wolf.nereid.pl), creator of the Tracy frame profiler and other
-  good tools.
+- [Bartosz Taudul's blog](https://wolf.nereid.pl), creator of the Tracy frame profiler.
 - [Ignacio Castaño's blog](https://www.ludicon.com/castano/blog/) on texture compression, graphics
   and game development.
 - [Andreas Fredriksson's blog](https://deplinenoise.wordpress.com/). This is a stale blog as far as
   I know, but there are interesting posts there.
-- [Bartoz Taudul's blog](https://wolf.nereid.pl), the creator of the Tracy frame profiler.
 
 # Researchers
 
@@ -66,6 +63,20 @@ and find cool content? Let's bring this culture back! Here is my little contribu
 - [Arun Debray](https://adebray.github.io/), mostly working on algebraic topology with an eye
   towards quantum field theory and condensed-matter physics.
 - [Ravi Vakil](https://virtualmath1.stanford.edu/~vakil/), mostly working on algebraic geometry.
+
+# Selected Works
+
+## Blog Posts
+
+- Casey Muratori's [Semantic Compression](https://caseymuratori.com/blog_0015) post.
+
+## Series
+
+- Peter Shirley's [Ray Tracing in One Weekend](https://raytracing.github.io/) series.
+
+## Papers
+
+- (Upcoming)
 
 <!-- I can't recommend these since I haven't read them myself. Storing them here for later reference.
 
