@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+
+    <!-- The loading of KaTeX is deferred to speed up page rendering -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+
+    <!-- To automatically render math in text elements, include the auto-render extension: -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+
+    <title>Mugnaini&#x27;s blog</title>
+    
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <meta name="robots" content="noodp"/>
+
+    <link rel="stylesheet" href="https://operad.dev/style.css">
+    <link rel="stylesheet" href="https://operad.dev/color/pink.css">
+
+        <link rel="stylesheet" href="https://operad.dev/color/background_blue.css">
+    
+    <link rel="stylesheet" href="https://operad.dev/font-hack.css">
+
+        <link rel="shortcut icon" type="image/png" href="/favicon_knot-192x192.png">
+    
+    </head>
+
+<body class="">
+<div class="container">
+    
+    <header class="header">
+        <div class="header__inner">
+            <div class="header__logo">
+                    
+                <a href="https://operad.dev" style="text-decoration: none;">
+                    <div class="logo">
+                      
+                            Mugnaini&#x27;s blog
+                        
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        
+        
+                <nav class="menu">
+            <ul class="menu__inner">
+                <li class="active"><a href="https://operad.dev">blog</a></li>
+            
+                <li><a href="https://operad.dev/about">about</a></li>
+            
+                <li><a href="/luiz_mugnaini_cv.pdf" target="_blank" rel="noopener noreferrer">cv</a></li>
+            
+                <li><a href="https://git.sr.ht/~luizmugnaini" target="_blank" rel="noopener noreferrer">code</a></li>
+            
+                <li><a href="https://operad.dev/tags">tags</a></li>
+            
+                <li><a href="https://operad.dev/archive">archive</a></li>
+            
+                <li><a href="https://operad.dev/misc">misc</a></li>
+            </ul>
+        </nav>
+    
+    
+        
+    </header>
+    
+
+    <div class="content">
+        
+    <div class="post">
+        
+    <h1 class="post-title"><a href="https://operad.dev/chirp/">exploring emulation with chirp 🐣: a CHIP-8 interpreter</a></h1>
+    <div class="post-meta-inline">
+        
+    <span class="post-date">
+            2023-02-23
+        </span>
+
+    </div>
+
+    
+        <span class="post-tags-inline">
+                :: tags:&nbsp;
+                <a class="post-tag" href="https://operad.dev/tags/emulation/">#emulation</a>&nbsp;
+                <a class="post-tag" href="https://operad.dev/tags/interpreter/">#interpreter</a></span>
+    
+
+        
+        <div class="post-content">
+            <p>One of my long-term aspirations is to forge an emulator for the legendary <a href="https://en.wikipedia.org/wiki/Game_Boy">Game Boy</a>
+console. As a side-quest, I decided to write a virtual machine for the
+<a href="https://en.wikipedia.org/wiki/CHIP-8">CHIP-8</a> interpreted language from the mid-1970's.
+Although not a hardware emulation project, it makes you dig a bit into techniques common
+to emulation software.</p>
+
+  <figure class="center" >
+    <img src="/img/chirp/maze.png" alt="Screenshot of the MAZE game running on chirp" />
+    
+      <figcaption class="center" style="font-weight: bold; font-style: italic;">MAZE game running on `chirp`</figcaption>
+    
+  </figure>
+
+<span id="continue-reading"></span>
+<p>The heart of <a href="https://git.sr.ht/~luizmugnaini/chirp"><code>chirp</code></a> is an interpreter of
+the CHIP-8 programming language, with roots in the early days of game
+development. This project can serve as a learning material for someone
+interested in dipping their toes in low-level waters.</p>
+
+  <figure class="center" >
+    <img src="/img/chirp/invaders.png" alt="Screenshot of the Space Invaders game running on chirp" />
+    
+      <figcaption class="center" style="font-weight: bold; font-style: italic;">Space Invaders game running on `chirp`</figcaption>
+    
+  </figure>
+
+<p>I tried to make the external dependencies as minimal as possible:</p>
+<ul>
+<li><a href="https://crates.io/crates/rand"><code>rand</code></a>.</li>
+<li><a href="https://www.libsdl.org/">SDL2</a>.</li>
+</ul>
+<p>Sure, the number of dependencies is minimal, but that doesn't make the external code smaller.
+Being Rust, you can see that these dependencies are definitely not minimal. SDL2 is an absolute beast
+and many of its features are not necessary for this project, it could be completely replaced.</p>
+<p>Throughout the creation of <code>chirp</code>, I found <a href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM">Cowgod's CHIP-8 Technical Reference</a>
+to be an awesome resource, serving as the main reference for the project.</p>
+<p>Last update: 2025-06-01</p>
+
+        </div>
+
+        
+        <div class="pagination">
+            <div class="pagination__title">
+                <span class="pagination__title-h">Read more</span>
+                <hr />
+            </div>
+            <div class="pagination__buttons">
+                    <span class="button previous">
+                        <a href="https://operad.dev/deep-dive/">
+                            <span class="button__icon">←</span>&nbsp;
+                            <span class="button__text">deep dive</span>
+                        </a>
+                    </span>
+                
+                
+                    <span class="button next">
+                        <a href="https://operad.dev/2d-tqft-frobenius/">
+                            <span class="button__text">2D topological quantum field theories and commutative Frobenius algebras</span>&nbsp;
+                            <span class="button__icon">→</span>
+                        </a>
+                    </span>
+                </div>
+        </div>
+    
+    </div>
+
+    </div>
+
+    
+    <footer class="footer">
+        <div class="footer__inner">
+                <div class="copyright">
+                        <span>© 
+    2025
+ Luiz Mugnaini</span>
+                    <span class="copyright-theme">
+                        <span class="copyright-theme-sep">:: </span>
+                        Theme: <a href="https://github.com/pawroman/zola-theme-terminimal/">Terminimal</a> by pawroman
+                    </span>
+                </div>
+            </div>
+    </footer>
+    
+
+</div>
+</body>
+
+</html>

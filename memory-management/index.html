@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+
+    <!-- The loading of KaTeX is deferred to speed up page rendering -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+
+    <!-- To automatically render math in text elements, include the auto-render extension: -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+
+    <title>Mugnaini&#x27;s blog</title>
+    
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <meta name="robots" content="noodp"/>
+
+    <link rel="stylesheet" href="https://operad.dev/style.css">
+    <link rel="stylesheet" href="https://operad.dev/color/pink.css">
+
+        <link rel="stylesheet" href="https://operad.dev/color/background_blue.css">
+    
+    <link rel="stylesheet" href="https://operad.dev/font-hack.css">
+
+        <link rel="shortcut icon" type="image/png" href="/favicon_knot-192x192.png">
+    
+    </head>
+
+<body class="">
+<div class="container">
+    
+    <header class="header">
+        <div class="header__inner">
+            <div class="header__logo">
+                    
+                <a href="https://operad.dev" style="text-decoration: none;">
+                    <div class="logo">
+                      
+                            Mugnaini&#x27;s blog
+                        
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        
+        
+                <nav class="menu">
+            <ul class="menu__inner">
+                <li class="active"><a href="https://operad.dev">blog</a></li>
+            
+                <li><a href="https://operad.dev/about">about</a></li>
+            
+                <li><a href="/luiz_mugnaini_cv.pdf" target="_blank" rel="noopener noreferrer">cv</a></li>
+            
+                <li><a href="https://git.sr.ht/~luizmugnaini" target="_blank" rel="noopener noreferrer">code</a></li>
+            
+                <li><a href="https://operad.dev/tags">tags</a></li>
+            
+                <li><a href="https://operad.dev/archive">archive</a></li>
+            
+                <li><a href="https://operad.dev/misc">misc</a></li>
+            </ul>
+        </nav>
+    
+    
+        
+    </header>
+    
+
+    <div class="content">
+        
+    <div class="post">
+        
+    <h1 class="post-title"><a href="https://operad.dev/memory-management/">Memory management strategies</a></h1>
+    <div class="post-meta-inline">
+        
+    <span class="post-date">
+            2024-11-25
+        </span>
+
+    </div>
+
+    
+        <span class="post-tags-inline">
+                :: tags:&nbsp;
+                <a class="post-tag" href="https://operad.dev/tags/memory/">#memory</a></span>
+    
+
+        
+        <div class="post-content">
+            <p>In this post, I'll be detailing how C and C++ can be programmed in a sane and memory-safe way. We'll
+be going through some custom memory allocator strategies that provide simple ways of dissolving
+common memory problems.</p>
+<p>This post is inspired by my <a href="https://git.sr.ht/~luizmugnaini/runtime">C++ core library</a>,
+whose source code is freely available. The main goal of the library is to deliver the programming
+experience I wanted and C wasn't able to fully deliver.</p>
+<span id="continue-reading"></span>
+<p>Over the last few years C got the fame of being a memory unsafe language due to its lack of
+intrinsic constraints that ensure proper object lifetime and ownership management - like you
+commonly have in new trendy languages. You might ask why bother learning memory strategies in C if I
+can simply use my language Z that has a borrow-checker or a garbage collector: well, language Z is
+not suited for all use cases - surely not for me. The borrow-checker is a pain to deal with and most
+memory strategies in that land, like ECS, are based in making the compiler shut up by hiding
+intricate lifetimes inside of longer living objects. Do I even need to talk about the garbage
+collector approach?</p>
+<h1 id="building-your-own-memory-system">Building your own memory system</h1>
+<p>When writing any API, one should question himself the scope and the audience of the API. In the case
+of a memory management system, the main concern is centred in memory safety. How much safety guard-rails
+should we build, and how much hand-holding does our end-user need?</p>
+<p>Guard-rails obviously comes with their own performance costs. For instance, if we wanted a very
+robust system that disallows for any use-after-free, we wouldn't be returning direct pointers to the
+memory to our users. To deal with that, we could use handles and manage their coherence internally
+(check <a href="https://floooh.github.io/2018/06/17/handles-vs-pointers.html">this post</a>, by Andre
+Weissflog, for more information). This would require every allocation to have a unique ID, every
+read request to be checked if ID's match, etc.</p>
+<p>In my personal case I don't really need all of this hand-holding and training-wheels. All I need is
+a performant system that can be easily managed, and ensures some level of memory safety. The
+<a href="https://git.sr.ht/~luizmugnaini/runtime">runtime library</a> leans into this very philosophy -
+obvious protocols exist between caller and callee, if the caller wants to break one of the these
+protocol assumptions, the callee won't try to stop the caller fearing stupidity of the programmer.
+In summary, the programmer is always treated as an intelligent being that knows what they are doing.
+As simple and obvious as this philosophy may seem, the current state of the software industry took a
+turn in favor of lazyness, with the excuse that the &quot;developer experience&quot; is the king. I certainly
+don't follow this way of thinking, in fact: the end-user is the king, and performance is queen.</p>
+<h1 id="alignment-rules-for-memory-reads">Alignment: rules for memory reads</h1>
+<p>The CPU memory reads cannot be done willy nilly at any given address. Modern architectures are
+optimised to read contiguous memory with a certain alignment - which makes stepping through memory a
+regular task (as opposed to jumping around randomly). This alignment is always a power of two and
+depends on the size of the memory units (e.g. a struct member) we want to read. In C++ you can query
+the memory alignment for a given type <code>T</code> using <code>alignof(T)</code> (in C, you can use <code>_Alignof(T)</code>).</p>
+<p>For instance, if we have an array of floats (each float with a size of 4 bytes), the address of the
+<code>n</code>th element of the array in memory should be of the form <code>4 n + c</code> where <code>c</code> is the address of the
+first element of the array. Hence we say that the alignment of a float is 4 bytes.</p>
+<p>For structs, the compiler may need to add paddings in order to satisfy alignment conditions. A lost
+art in programming is the arrangement of struct members for optimal alignment. Let's see this in
+practice.</p>
+<p>Suppose I have a struct <code>Foo</code> that has the following memory layout:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#6c7079;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#cd74e8;">struct </span><span style="color:#abb2bf;">Foo {
+</span><span style="color:#abb2bf;">    uint8_t</span><span style="color:#adb7c9;">*</span><span style="color:#abb2bf;"> memory;
+</span><span style="color:#abb2bf;">    uint32_t allocation_count;
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">double</span><span style="color:#abb2bf;">   some_metric;
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">float</span><span style="color:#abb2bf;">    some_other_metric;
+</span><span style="color:#abb2bf;">};
+</span></code></pre>
+<p>From the point of view of the compiler, the actual memory layout of <code>Foo</code> has to make sure that the
+alignment of each struct member is valid. Thus in reality, the arrangement of bytes composing
+<code>Foo</code> is laid as follows:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#6c7079;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#cd74e8;">struct </span><span style="color:#abb2bf;">Foo {
+</span><span style="color:#abb2bf;">    uint8_t</span><span style="color:#adb7c9;">*</span><span style="color:#abb2bf;"> memory;             </span><span style="font-style:italic;color:#5f697a;">// 8 bytes.
+</span><span style="color:#abb2bf;">    uint32_t allocation_count;   </span><span style="font-style:italic;color:#5f697a;">// 4 bytes.
+</span><span style="color:#abb2bf;">    uint8_t  padding1[</span><span style="color:#db9d63;">4</span><span style="color:#abb2bf;">];        </span><span style="font-style:italic;color:#5f697a;">// Inserted padding of 4 bytes.
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">double</span><span style="color:#abb2bf;">   some_metric;        </span><span style="font-style:italic;color:#5f697a;">// 8 bytes.
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">float</span><span style="color:#abb2bf;">    some_other_metric;  </span><span style="font-style:italic;color:#5f697a;">// 4 bytes.
+</span><span style="color:#abb2bf;">    uint8_t  padding2[</span><span style="color:#db9d63;">4</span><span style="color:#abb2bf;">];        </span><span style="font-style:italic;color:#5f697a;">// Inserted padding of 4 bytes.
+</span><span style="color:#abb2bf;">};
+</span></code></pre>
+<p>Notice how we're wasting 8 bytes of memory for each instance of our struct.</p>
+<p>But really, why does the compiler insert padding between struct members? Most modern CPU
+architectures require data to be aligned according to its size. Misaligned access can lead to
+performance penalties on some platforms (like x86), and in other cases it can even cause hardware
+exceptions to be thrown.</p>
+<p>One thing I didn't explain is why the compiler has to put those 4 bytes of padding after the last
+structure member. If for some reason you have a contiguous array of <code>Foo</code> instances, in order to
+traverse through the array we would use the alignment of <code>Foo</code> (8 bytes) - and if it wasn't for
+those last 4 bytes, the address of the next <code>Foo</code> instance would be misaligned! Once again, the
+compiler has to account for the worst case scenario.</p>
+<p>Fixing our bad memory usage is simple, we just rearrange the members taking into account their
+sizes:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#6c7079;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#cd74e8;">struct </span><span style="color:#abb2bf;">Foo {
+</span><span style="color:#abb2bf;">    uint8_t</span><span style="color:#adb7c9;">*</span><span style="color:#abb2bf;"> memory;             </span><span style="font-style:italic;color:#5f697a;">// 8 bytes.
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">double</span><span style="color:#abb2bf;">   some_metric;        </span><span style="font-style:italic;color:#5f697a;">// 8 bytes.
+</span><span style="color:#abb2bf;">    uint32_t allocation_count;   </span><span style="font-style:italic;color:#5f697a;">// 4 bytes.
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">float</span><span style="color:#abb2bf;">    some_other_metric;  </span><span style="font-style:italic;color:#5f697a;">// 4 bytes.
+</span><span style="color:#abb2bf;">};
+</span></code></pre>
+<p>Analogously, every time we allocate memory in our custom allocators we'll have to make sure to
+account for the necessary alignment restrictions.</p>
+<h1 id="arena-allocator">Arena Allocator</h1>
+<p>The simplest allocator - yet sufficient for almost all use-cases - is the <em>arena memory allocator</em>.
+Its construction is ridiculously simple: a pointer to the block of memory being managed, the total
+maximum capacity of the block, and an offset relative to the start of the block to the free
+space:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#6c7079;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#cd74e8;">struct </span><span style="color:#abb2bf;">Arena {
+</span><span style="color:#abb2bf;">    uint8_t</span><span style="color:#adb7c9;">*</span><span style="color:#abb2bf;"> memory;
+</span><span style="color:#abb2bf;">    size_t   capacity;
+</span><span style="color:#abb2bf;">    size_t   offset;
+</span><span style="color:#abb2bf;">};
+</span></code></pre>
+<p>Having only this amount of information to deal with, the arena can only be used to accumulate
+allocations for a certain period and then free all of the allocated memory at once. This constraint
+is perfect for modelling the concept of a lifetime: objects allocated in the same arena, have a
+common lifetime end - that is, when the arena has its offset reset. This allows one to trivially
+deal with lifetime issues that languages like Rust try to impose in their compiler.</p>
+<p>It is to be noted that your style of programming with arenas may differ from the typical
+programming you see out there. It is common to see programs where ownership of memory is poorly
+defined in the course of the program lifetime. For this exact reason, people in the land of
+&quot;Modern C++&quot; resort to &quot;smart&quot; pointers - instead of solving the root cause, this &quot;solution&quot; only
+remedy the problem of a poorly designed software by means of runtime cost and, consequently,
+absurdly horrible performance.</p>
+<p>When programming with arenas, one commonly thinks in groups of allocations (hence lifetime groups),
+and chunks of objects. Work is mainly done with these chunks in mind, improving cache spacial and
+temporal locality. This way of programming is sometimes named &quot;data oriented programming&quot;, but
+in reality this is simply the way computers where designed to be used - we don't even need a term
+for that, it's merely non-pessimised programming if you think about it.</p>
+<p>Many of the made-up problems created by modern software practices are completely dissolved when you
+design your program with memory arenas in mind instead of thinking about the program at the
+object-level. For instance, ownership and lifetime problems are almost a non-issue and an easy to
+solve problem.</p>
+<h2 id="allocating-memory-blocks">Allocating memory blocks</h2>
+<p>When allocating a new block of memory in the arena, we have to account for the alignment of the
+structure or array that will be allocated. By the simplicity of the arena, computing the next
+address that satisfy the required alignment is a pretty simple task:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#6c7079;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#abb2bf;">size_t </span><span style="color:#5cb3fa;">align_forward</span><span style="color:#abb2bf;">(uintptr_t </span><span style="color:#eb6772;">ptr_addr</span><span style="color:#abb2bf;">, size_t </span><span style="color:#eb6772;">alignment</span><span style="color:#abb2bf;">) {
+</span><span style="color:#abb2bf;">    size_t mod_align </span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;"> ptr_addr </span><span style="color:#adb7c9;">&amp; </span><span style="color:#abb2bf;">(alignment </span><span style="color:#adb7c9;">- </span><span style="color:#db9d63;">1</span><span style="color:#abb2bf;">); </span><span style="font-style:italic;color:#5f697a;">// Same as `ptr_addr % alignment`
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">if </span><span style="color:#abb2bf;">(mod_align </span><span style="color:#adb7c9;">!= </span><span style="color:#db9d63;">0</span><span style="color:#abb2bf;">) {
+</span><span style="color:#abb2bf;">        ptr_addr </span><span style="color:#adb7c9;">+=</span><span style="color:#abb2bf;"> alignment </span><span style="color:#adb7c9;">-</span><span style="color:#abb2bf;"> mod_align;
+</span><span style="color:#abb2bf;">    }
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">return</span><span style="color:#abb2bf;"> ptr_addr;
+</span><span style="color:#abb2bf;">}
+</span></code></pre>
+<p>where the parameter <code>alignment</code> is assumed to be a power of two.</p>
+<p>Having this auxiliar function at hand, making a new allocation can be very easily done:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#6c7079;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#abb2bf;">uint8_t</span><span style="color:#adb7c9;">* </span><span style="color:#5cb3fa;">arena_alloc_align</span><span style="color:#abb2bf;">(Arena</span><span style="color:#adb7c9;">* </span><span style="color:#eb6772;">arena</span><span style="color:#abb2bf;">, size_t </span><span style="color:#eb6772;">size_bytes</span><span style="color:#abb2bf;">, uint32_t </span><span style="color:#eb6772;">alignment</span><span style="color:#abb2bf;">) {
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">if </span><span style="color:#abb2bf;">(arena </span><span style="color:#adb7c9;">== </span><span style="color:#db9d63;">nullptr </span><span style="color:#adb7c9;">||</span><span style="color:#abb2bf;"> arena-&gt;</span><span style="color:#eb6772;">capacity </span><span style="color:#adb7c9;">== </span><span style="color:#db9d63;">0 </span><span style="color:#adb7c9;">||</span><span style="color:#abb2bf;"> size_bytes </span><span style="color:#adb7c9;">== </span><span style="color:#db9d63;">0</span><span style="color:#abb2bf;">) {
+</span><span style="color:#abb2bf;">        </span><span style="color:#cd74e8;">return </span><span style="color:#db9d63;">nullptr</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">    }
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    uintptr_t memory_addr    </span><span style="color:#adb7c9;">= </span><span style="color:#abb2bf;">(uintptr_t)arena-&gt;</span><span style="color:#eb6772;">buf</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">    uintptr_t new_block_addr </span><span style="color:#adb7c9;">= </span><span style="color:#eb6772;">align_forward</span><span style="color:#abb2bf;">(memory_addr </span><span style="color:#adb7c9;">+</span><span style="color:#abb2bf;"> arena-&gt;</span><span style="color:#eb6772;">offset</span><span style="color:#abb2bf;">, alignment);
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">if </span><span style="color:#abb2bf;">(new_block_addr </span><span style="color:#adb7c9;">+</span><span style="color:#abb2bf;"> size_bytes </span><span style="color:#adb7c9;">&gt;</span><span style="color:#abb2bf;"> arena-&gt;</span><span style="color:#eb6772;">capacity </span><span style="color:#adb7c9;">+</span><span style="color:#abb2bf;"> memory_addr) {
+</span><span style="color:#abb2bf;">        </span><span style="font-style:italic;color:#5f697a;">// Not enough free memory.
+</span><span style="color:#abb2bf;">        </span><span style="color:#cd74e8;">return </span><span style="color:#db9d63;">nullptr</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">    }
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    </span><span style="font-style:italic;color:#5f697a;">// Commit the new block of memory.
+</span><span style="color:#abb2bf;">    arena-&gt;</span><span style="color:#eb6772;">offset </span><span style="color:#adb7c9;">= </span><span style="color:#abb2bf;">(size_t)(size_bytes </span><span style="color:#adb7c9;">+</span><span style="color:#abb2bf;"> new_block_addr </span><span style="color:#adb7c9;">-</span><span style="color:#abb2bf;"> memory_addr);
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    uint8_t</span><span style="color:#adb7c9;">*</span><span style="color:#abb2bf;"> new_block </span><span style="color:#adb7c9;">= </span><span style="color:#abb2bf;">(uint8_t</span><span style="color:#adb7c9;">*</span><span style="color:#abb2bf;">)new_block_addr;
+</span><span style="color:#abb2bf;">    </span><span style="color:#5ebfcc;">memset</span><span style="color:#abb2bf;">(new_block, </span><span style="color:#db9d63;">0</span><span style="color:#abb2bf;">, size_bytes);
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">return</span><span style="color:#abb2bf;"> new_block;
+</span><span style="color:#abb2bf;">}
+</span></code></pre>
+<p>You should also create procedures that deal with the following operations: clearing the arena,
+resizing an already allocated block of memory, etc.</p>
+<h2 id="temporary-allocations-with-checkpoints">Temporary allocations with checkpoints</h2>
+<p>Having the constraint of only being able to free all memory at once can be a bad restriction once
+you want to perform temporary computations that shouldn't be sticking around in the allocator. In
+order to overcome this constraint, we can create a checkpoint system that records the current state of
+the arena and is capable of restoring the allocator once the memory allocated from the checkpoint
+onwards isn't needed anymore. This amounts to a simple implementation like the following:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#6c7079;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#cd74e8;">struct </span><span style="color:#abb2bf;">ArenaCheckpoint {
+</span><span style="color:#abb2bf;">    size_t saved_offset;
+</span><span style="color:#abb2bf;">};
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">ArenaCheckpoint </span><span style="color:#5cb3fa;">arena_make_checkpoint</span><span style="color:#abb2bf;">(Arena</span><span style="color:#adb7c9;">* </span><span style="color:#eb6772;">arena</span><span style="color:#abb2bf;">) {
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">return </span><span style="color:#eb6772;">ArenaCheckpoint</span><span style="color:#abb2bf;">{arena-&gt;</span><span style="color:#eb6772;">offset</span><span style="color:#abb2bf;">};
+</span><span style="color:#abb2bf;">}
+</span><span style="color:#abb2bf;">
+</span><span style="color:#cd74e8;">void </span><span style="color:#5cb3fa;">arena_restore_state</span><span style="color:#abb2bf;">(Arena</span><span style="color:#adb7c9;">* </span><span style="color:#eb6772;">arena</span><span style="color:#abb2bf;">, ArenaCheckpoint</span><span style="color:#adb7c9;">* </span><span style="color:#eb6772;">checkpoint</span><span style="color:#abb2bf;">) {
+</span><span style="color:#abb2bf;">    arena-&gt;</span><span style="color:#eb6772;">offset </span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;"> checkpoint-&gt;</span><span style="color:#eb6772;">saved_offset</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">}
+</span></code></pre>
+<p>You can certainly extend the behaviour of checkpoints. For instance, you can create a kind
+auto-restoring checkpoint with the use of destructors. Moreover, I would recommend creating debug
+checks in order to ensure the correctness of the checkpoints being restored (e.g. does it come from
+the same arena? is the offset valid? etc.).</p>
+<h1 id="stack-allocator">Stack Allocator</h1>
+<p>A stack allocator is nothing more than a contiguous memory block which we divide in order to offer
+memory space to consumers. In order to avoid memory fragmentation, we only allow the last allocated
+block to be freed.</p>
+<h2 id="headers-storing-relevant-information">Headers: storing relevant information</h2>
+<p>Each memory block allocated by our stack allocator will be accompanied by a header that will carry
+some basic information about the memory block it's associated with.</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#6c7079;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#cd74e8;">struct </span><span style="color:#abb2bf;">StackAllocHeader {
+</span><span style="color:#abb2bf;">    size_t padding;
+</span><span style="color:#abb2bf;">    size_t capacity;
+</span><span style="color:#abb2bf;">    size_t previous_offset;
+</span><span style="color:#abb2bf;">};
+</span></code></pre>
+<p>Let me explain what each one of these fields mean:</p>
+<ul>
+<li><code>padding</code>: The offset relative to the <em>end</em> of the previously allocated memory block until the start
+of the current memory block. This is here due to the different alignment requirements of each block.</li>
+<li><code>capacity</code>: The total capacity, in bytes, of the current memory block.</li>
+<li><code>previous_offset</code>: The offset relative to the <em>start</em> of previously allocated block until the
+start of the current memory block. This will help us to traverse the stack backwards.</li>
+</ul>
+<p>You can visualise the header members as follows:</p>
+<pre data-lang="md" style="background-color:#2b303b;color:#6c7079;" class="language-md "><code class="language-md" data-lang="md"><span style="color:#abb2bf;">         previous offset              |alignment|              |------capacity------|
+</span><span style="color:#abb2bf;">                |                     |         |              ^                    ^
+</span><span style="color:#abb2bf;">                v                     v         v              |                    |
+</span><span style="color:#abb2bf;">|previous header|previous memory block|+++++++++|current header|current memory block|
+</span><span style="color:#abb2bf;">                                      ^                        ^
+</span><span style="color:#abb2bf;">                                      |---------padding--------|
+</span></code></pre>
+<h2 id="allocator-structure">Allocator Structure</h2>
+<p>On to the stack allocator proper! The basic layout of the allocator looks like this:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#6c7079;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#cd74e8;">struct </span><span style="color:#abb2bf;">Stack {
+</span><span style="color:#abb2bf;">    uint8_t</span><span style="color:#adb7c9;">*</span><span style="color:#abb2bf;"> memory;
+</span><span style="color:#abb2bf;">    size_t   capacity;
+</span><span style="color:#abb2bf;">    size_t   offset;
+</span><span style="color:#abb2bf;">    size_t   previous_offset;
+</span><span style="color:#abb2bf;">};
+</span></code></pre>
+<ul>
+<li><code>memory</code>: Pointer to the start of the memory block managed by the allocator.</li>
+<li><code>capacity</code>: The maximum capacity in bytes of the allocator's memory block.</li>
+<li><code>offset</code>: The offset, relative to <code>memory</code>, to the start of the region available for allocations.</li>
+<li><code>previous_offset</code>: The offset, relative to <code>memory</code>, to the start of the last allocated memory block.</li>
+</ul>
+<p>This can be visualised by the following diagram:</p>
+<pre data-lang="md" style="background-color:#2b303b;color:#6c7079;" class="language-md "><code class="language-md" data-lang="md"><span style="color:#abb2bf;">                                         offset
+</span><span style="color:#abb2bf;">                                           |
+</span><span style="color:#abb2bf;">                                           v
+</span><span style="color:#abb2bf;">  |header 1|memory 1|++++|header 2|memory 2|++free space++|
+</span><span style="color:#abb2bf;">  ^                               ^                       ^
+</span><span style="color:#abb2bf;">  |                               |                       |
+</span><span style="color:#abb2bf;">memory                         previous                  end
+</span><span style="color:#abb2bf;">  |                             offset                    |
+</span><span style="color:#abb2bf;">  |                                                       |
+</span><span style="color:#abb2bf;">  |                                                       |
+</span><span style="color:#abb2bf;">  |--------------------- capacity ------------------------|
+</span></code></pre>
+<p>The allocator can be either the owner or merely the manager of the memory pointed by <code>Stack::memory</code>.
+In my runtime, I opted for using allocators as mere managers, so you need to initialise them with a
+valid pointer to a previously allocated block of memory.</p>
+<h2 id="allocating-blocks">Allocating Blocks</h2>
+<p>Each block provided by the stack allocator consists of an <em>alignment</em> offset with respect to the end
+of the previous block, a <em>header</em>, and the available block of <em>memory</em> requested by the user.</p>
+<pre data-lang="md" style="background-color:#2b303b;color:#6c7079;" class="language-md "><code class="language-md" data-lang="md"><span style="color:#abb2bf;">      |alignment|    memory
+</span><span style="color:#abb2bf;">      |         |      |
+</span><span style="color:#abb2bf;">      v         v      v
+</span><span style="color:#abb2bf;">| ... |+++++++++|header|memory block| ... |
+</span><span style="color:#abb2bf;">      ^                ^
+</span><span style="color:#abb2bf;">      |                |
+</span><span style="color:#abb2bf;">      |----padding-----|
+</span></code></pre>
+<p>The block of memory is preceded by a <em>padding</em> that comprises both the alignment needed for the
+memory block and its corresponding header.</p>
+<p>In order to compute the padding needed by the block we can implement the following function:</p>
+<pre data-lang="c" style="background-color:#2b303b;color:#6c7079;" class="language-c "><code class="language-c" data-lang="c"><span style="color:#abb2bf;">size_t </span><span style="color:#5cb3fa;">padding_with_header</span><span style="color:#abb2bf;">(
+</span><span style="color:#abb2bf;">    uintptr_t  </span><span style="color:#eb6772;">ptr_addr</span><span style="color:#abb2bf;">,
+</span><span style="color:#abb2bf;">    size_t     </span><span style="color:#eb6772;">alignment</span><span style="color:#abb2bf;">,
+</span><span style="color:#abb2bf;">    size_t     </span><span style="color:#eb6772;">header_size</span><span style="color:#abb2bf;">,
+</span><span style="color:#abb2bf;">    size_t     </span><span style="color:#eb6772;">header_alignment</span><span style="color:#abb2bf;">) {
+</span><span style="color:#abb2bf;">    </span><span style="font-style:italic;color:#5f697a;">// Calculate the padding necessary for the new block of memory.
+</span><span style="color:#abb2bf;">    size_t padding   </span><span style="color:#adb7c9;">= </span><span style="color:#db9d63;">0</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">    size_t mod_align </span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;"> ptr_addr </span><span style="color:#adb7c9;">&amp; </span><span style="color:#abb2bf;">(alignment </span><span style="color:#adb7c9;">- </span><span style="color:#db9d63;">1</span><span style="color:#abb2bf;">);  </span><span style="font-style:italic;color:#5f697a;">// Same as `ptr_addr % alignment`.
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">if </span><span style="color:#abb2bf;">(mod_align </span><span style="color:#adb7c9;">!= </span><span style="color:#db9d63;">0</span><span style="color:#abb2bf;">) {
+</span><span style="color:#abb2bf;">        padding </span><span style="color:#adb7c9;">+=</span><span style="color:#abb2bf;"> alignment </span><span style="color:#adb7c9;">-</span><span style="color:#abb2bf;"> mod_align;
+</span><span style="color:#abb2bf;">    }
+</span><span style="color:#abb2bf;">    ptr_addr </span><span style="color:#adb7c9;">+=</span><span style="color:#abb2bf;"> padding;
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    </span><span style="font-style:italic;color:#5f697a;">// Add the padding necessary for the header alignment.
+</span><span style="color:#abb2bf;">    size_t mod_header </span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;"> ptr_addr </span><span style="color:#adb7c9;">&amp; </span><span style="color:#abb2bf;">(header_alignment </span><span style="color:#adb7c9;">- </span><span style="color:#db9d63;">1</span><span style="color:#abb2bf;">);  </span><span style="font-style:italic;color:#5f697a;">// Same as `ptr_addr % header_alignment`.
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">if </span><span style="color:#abb2bf;">(mod_header </span><span style="color:#adb7c9;">!= </span><span style="color:#db9d63;">0</span><span style="color:#abb2bf;">) {
+</span><span style="color:#abb2bf;">        padding </span><span style="color:#adb7c9;">+=</span><span style="color:#abb2bf;"> header_alignment </span><span style="color:#adb7c9;">-</span><span style="color:#abb2bf;"> mod_header;
+</span><span style="color:#abb2bf;">    }
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    </span><span style="font-style:italic;color:#5f697a;">// The padding should at least be able to contain the header.
+</span><span style="color:#abb2bf;">    padding </span><span style="color:#adb7c9;">+=</span><span style="color:#abb2bf;"> header_size;
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">return</span><span style="color:#abb2bf;"> padding;
+</span><span style="color:#abb2bf;">}
+</span></code></pre>
+<p>It should be stressed that the <code>alignment</code> and <code>header_alignment</code> parameters should always be powers
+of two.</p>
+<p>To allocate a new block of memory in the stack, we can proceed as follows:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#6c7079;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#abb2bf;">uint8_t</span><span style="color:#adb7c9;">* </span><span style="color:#5cb3fa;">stack_alloc_align</span><span style="color:#abb2bf;">(Stack</span><span style="color:#adb7c9;">* </span><span style="color:#eb6772;">stack</span><span style="color:#abb2bf;">, size_t </span><span style="color:#eb6772;">size_bytes</span><span style="color:#abb2bf;">, uint32_t </span><span style="color:#eb6772;">alignment</span><span style="color:#abb2bf;">) {
+</span><span style="color:#abb2bf;">    size_t current_capacity </span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;"> stack-&gt;</span><span style="color:#eb6772;">capacity</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">    size_t current_offset   </span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;"> stack-&gt;</span><span style="color:#eb6772;">offset</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">if </span><span style="color:#abb2bf;">(current_capacity </span><span style="color:#adb7c9;">== </span><span style="color:#db9d63;">0 </span><span style="color:#adb7c9;">||</span><span style="color:#abb2bf;"> size_bytes </span><span style="color:#adb7c9;">== </span><span style="color:#db9d63;">0</span><span style="color:#abb2bf;">) {
+</span><span style="color:#abb2bf;">        </span><span style="color:#cd74e8;">return </span><span style="color:#db9d63;">nullptr</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">    }
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    uint8_t</span><span style="color:#adb7c9;">*</span><span style="color:#abb2bf;"> free_memory </span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;"> stack-&gt;</span><span style="color:#eb6772;">buf </span><span style="color:#adb7c9;">+</span><span style="color:#abb2bf;"> current_offset;
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    size_t padding </span><span style="color:#adb7c9;">= </span><span style="color:#eb6772;">padding_with_header</span><span style="color:#abb2bf;">(
+</span><span style="color:#abb2bf;">        (uintptr_t)free_memory,
+</span><span style="color:#abb2bf;">        alignment,
+</span><span style="color:#abb2bf;">        </span><span style="color:#adb7c9;">sizeof</span><span style="color:#abb2bf;">(StackHeader),
+</span><span style="color:#abb2bf;">        </span><span style="color:#adb7c9;">alignof</span><span style="color:#abb2bf;">(StackHeader));
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">if </span><span style="color:#abb2bf;">(padding </span><span style="color:#adb7c9;">+</span><span style="color:#abb2bf;"> size_bytes </span><span style="color:#adb7c9;">&gt;</span><span style="color:#abb2bf;"> current_capacity </span><span style="color:#adb7c9;">-</span><span style="color:#abb2bf;"> current_offset) {
+</span><span style="color:#abb2bf;">        </span><span style="color:#cd74e8;">return </span><span style="color:#db9d63;">nullptr</span><span style="color:#abb2bf;">;  </span><span style="font-style:italic;color:#5f697a;">// Not enough memory...
+</span><span style="color:#abb2bf;">    }
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    </span><span style="font-style:italic;color:#5f697a;">// Address to the start of the new block of memory.
+</span><span style="color:#abb2bf;">    uint8_t</span><span style="color:#adb7c9;">*</span><span style="color:#abb2bf;"> new_block </span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;"> free_memory </span><span style="color:#adb7c9;">+</span><span style="color:#abb2bf;"> padding;
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    </span><span style="font-style:italic;color:#5f697a;">// Write to the header associated with the new block of memory.
+</span><span style="color:#abb2bf;">    StackHeader</span><span style="color:#adb7c9;">*</span><span style="color:#abb2bf;"> new_header     </span><span style="color:#adb7c9;">= </span><span style="color:#abb2bf;">(StackHeader</span><span style="color:#adb7c9;">*</span><span style="color:#abb2bf;">)(new_block </span><span style="color:#adb7c9;">- sizeof</span><span style="color:#abb2bf;">(StackHeader));
+</span><span style="color:#abb2bf;">    new_header-&gt;</span><span style="color:#eb6772;">padding         </span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;"> padding;
+</span><span style="color:#abb2bf;">    new_header-&gt;</span><span style="color:#eb6772;">capacity        </span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;"> size_bytes;
+</span><span style="color:#abb2bf;">    new_header-&gt;</span><span style="color:#eb6772;">previous_offset </span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;"> stack-&gt;</span><span style="color:#eb6772;">previous_offset</span><span style="color:#abb2bf;">;
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    </span><span style="font-style:italic;color:#5f697a;">// Update the stack offsets.
+</span><span style="color:#abb2bf;">    stack-&gt;</span><span style="color:#eb6772;">previous_offset </span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;"> current_offset </span><span style="color:#adb7c9;">+</span><span style="color:#abb2bf;"> padding;
+</span><span style="color:#abb2bf;">    stack-&gt;</span><span style="color:#eb6772;">offset          </span><span style="color:#adb7c9;">=</span><span style="color:#abb2bf;"> current_offset </span><span style="color:#adb7c9;">+</span><span style="color:#abb2bf;"> padding </span><span style="color:#adb7c9;">+</span><span style="color:#abb2bf;"> size_bytes;
+</span><span style="color:#abb2bf;">
+</span><span style="color:#abb2bf;">    </span><span style="color:#5ebfcc;">memset</span><span style="color:#abb2bf;">(new_block, size_bytes, </span><span style="color:#db9d63;">0</span><span style="color:#abb2bf;">);
+</span><span style="color:#abb2bf;">    </span><span style="color:#cd74e8;">return</span><span style="color:#abb2bf;"> new_block;
+</span><span style="color:#abb2bf;">}
+</span></code></pre>
+<h1 id="final-comments">Final comments</h1>
+<p>Manual memory management systems are actually quite fun and interesting. It is very simple to
+construct a consise, easy to use, safe, and performant memory system that will remove most of the
+common headaches created by bad software practices. It goes without saying that having a good memory
+system frees you from dealing with individual lifetimes, ownership problems, and the paranoia that
+<code>malloc</code> will inherently generate when used throughout the codebase.</p>
+<p>Most of the time, all that you need is an arena. You can also combine the use of the arena with a
+stack allocator for more intricate memory arrangements.</p>
+<p>If you wish to see the actual implementation of these allocators in my runtime library, please
+refer to the <a href="https://git.sr.ht/~luizmugnaini/runtime">source code</a>.</p>
+<h1 id="further-reading-material-for-the-nerds">Further reading material for the nerds</h1>
+<ul>
+<li><a href="https://www.memorymanagement.org/">Memory Management Reference</a>.</li>
+<li><a href="https://www.rfleury.com/p/untangling-lifetimes-the-arena-allocator">Untangling Lifetimes: The Arena Allocator</a>,
+by Ryan Fleury.</li>
+<li><a href="https://www.gingerbill.org/series/memory-allocation-strategies/">Memory Allocation Strategies series</a>, by gingerBill.</li>
+<li><a href="https://floooh.github.io/2018/06/17/handles-vs-pointers.html">Handles are better than pointers</a>, by
+Andre Weissflog.</li>
+<li>Aaron MacDougall's GDC 2016 talk on <a href="https://gdcvault.com/play/1023309/Building-a-Low-Fragmentation-Memory">Building a Low-Fragmentation Memory System for 64-bit Games</a>.</li>
+</ul>
+
+        </div>
+
+        
+        <div class="pagination">
+            <div class="pagination__title">
+                <span class="pagination__title-h">Read more</span>
+                <hr />
+            </div>
+            <div class="pagination__buttons">
+                    <span class="button previous">
+                        <a href="https://operad.dev/2d-tqft-frobenius/">
+                            <span class="button__icon">←</span>&nbsp;
+                            <span class="button__text">2D topological quantum field theories and commutative Frobenius algebras</span>
+                        </a>
+                    </span>
+                
+                </div>
+        </div>
+    
+    </div>
+
+    </div>
+
+    
+    <footer class="footer">
+        <div class="footer__inner">
+                <div class="copyright">
+                        <span>© 
+    2025
+ Luiz Mugnaini</span>
+                    <span class="copyright-theme">
+                        <span class="copyright-theme-sep">:: </span>
+                        Theme: <a href="https://github.com/pawroman/zola-theme-terminimal/">Terminimal</a> by pawroman
+                    </span>
+                </div>
+            </div>
+    </footer>
+    
+
+</div>
+</body>
+
+</html>

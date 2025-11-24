@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+
+    <!-- The loading of KaTeX is deferred to speed up page rendering -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+
+    <!-- To automatically render math in text elements, include the auto-render extension: -->
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+
+    <title>Mugnaini&#x27;s blog</title>
+    
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <meta name="robots" content="noodp"/>
+
+    <link rel="stylesheet" href="https://operad.dev/style.css">
+    <link rel="stylesheet" href="https://operad.dev/color/pink.css">
+
+        <link rel="stylesheet" href="https://operad.dev/color/background_blue.css">
+    
+    <link rel="stylesheet" href="https://operad.dev/font-hack.css">
+
+        <link rel="shortcut icon" type="image/png" href="/favicon_knot-192x192.png">
+    
+    </head>
+
+<body class="">
+<div class="container">
+    
+    <header class="header">
+        <div class="header__inner">
+            <div class="header__logo">
+                    
+                <a href="https://operad.dev" style="text-decoration: none;">
+                    <div class="logo">
+                      
+                            Mugnaini&#x27;s blog
+                        
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        
+        
+                <nav class="menu">
+            <ul class="menu__inner">
+                <li class="active"><a href="https://operad.dev">blog</a></li>
+            
+                <li><a href="https://operad.dev/about">about</a></li>
+            
+                <li><a href="/luiz_mugnaini_cv.pdf" target="_blank" rel="noopener noreferrer">cv</a></li>
+            
+                <li><a href="https://git.sr.ht/~luizmugnaini" target="_blank" rel="noopener noreferrer">code</a></li>
+            
+                <li><a href="https://operad.dev/tags">tags</a></li>
+            
+                <li><a href="https://operad.dev/archive">archive</a></li>
+            
+                <li><a href="https://operad.dev/misc">misc</a></li>
+            </ul>
+        </nav>
+    
+    
+        
+    </header>
+    
+
+    <div class="content">
+        
+    <div class="post">
+        
+    <h1 class="post-title"><a href="https://operad.dev/2d-tqft-frobenius/">2D topological quantum field theories and commutative Frobenius algebras</a></h1>
+    <div class="post-meta-inline">
+        
+    <span class="post-date">
+            2023-03-03
+        </span>
+
+    </div>
+
+    
+        <span class="post-tags-inline">
+                :: tags:&nbsp;
+                <a class="post-tag" href="https://operad.dev/tags/mathematics/">#mathematics</a></span>
+    
+
+        
+        <div class="post-content">
+            <p>As a final project for my <a href="https://sites.google.com/view/cristian-ortiz/usp2022-math-physics">mathematical-physics class</a>
+I studied the categorical equivalence between 2-dimensional topological
+quantum field theories (TQFT) and the category of commutative Frobenius algebras.
+This led to an interesting study paper, which I'm now making publicly accessible.</p>
+
+  <figure class="center" >
+    <img src="/img/tqft/monoidal-natural-transformation.png" alt="Monoidal natural transformation" />
+    
+      <figcaption class="center" style="font-weight: bold; font-style: italic;">Universal property of monoidal natural transformations</figcaption>
+    
+  </figure>
+
+<span id="continue-reading"></span>
+<p>The paper is divided into 9 sections:</p>
+<ol>
+<li><em>Monoidal categories</em>: This section serves as the foundation language of the
+paper, monoidal categories and their properties.</li>
+<li><em>Braided &amp; symmetric monoidal categories</em>: Here, we briefly delve into a
+special class of monoidal categories that permit commutative behaviour with
+respect to the associated bifunctor product.</li>
+<li><em>Cobordisms</em>: Central idea to topological quantum field theories is the idea
+of gluing smooth compact manifolds without boundary, which is what cobordisms
+are all about.</li>
+<li><em>Elements of Morse theory</em>: We provide a very introductory discussion of Morse theory,
+just showing some key results required for the rest of the paper.</li>
+<li><em>The category <code>n-cob</code></em>: One of the building blocks of the main theorem of
+the paper is the category of cobordisms of a given dimension <code>n</code>,
+comprised compact oriented <code>(n - 1)</code>-dimensional manifolds.</li>
+<li><em>Monoidal structure of <code>n-cob</code></em>: As expected, the category of cobordisms
+exhibits some good properties, and in particular it admits a monoidal
+structure.</li>
+<li><em>Frobenius Algebras</em>: Within the framework of monoidal categories, we study
+our second main character of our study in the paper, Frobenius algebras.</li>
+<li><em>Topological quantum field theories</em>: In this section we can finally define
+what we mean by a <em>TQFT</em>.</li>
+<li><em>Equivalence theorems</em>: Reaching to the climax of the paper, we delve into the
+theorems that motivated the paper's creation in the first place.</li>
+</ol>
+<p>You can access the paper <a href="/2d-tqft-frobenius.pdf">here</a>.</p>
+<p>Last update: 2025-01-06.</p>
+
+        </div>
+
+        
+        <div class="pagination">
+            <div class="pagination__title">
+                <span class="pagination__title-h">Read more</span>
+                <hr />
+            </div>
+            <div class="pagination__buttons">
+                    <span class="button previous">
+                        <a href="https://operad.dev/chirp/">
+                            <span class="button__icon">←</span>&nbsp;
+                            <span class="button__text">exploring emulation with chirp 🐣: a CHIP-8 interpreter</span>
+                        </a>
+                    </span>
+                
+                
+                    <span class="button next">
+                        <a href="https://operad.dev/memory-management/">
+                            <span class="button__text">Memory management strategies</span>&nbsp;
+                            <span class="button__icon">→</span>
+                        </a>
+                    </span>
+                </div>
+        </div>
+    
+    </div>
+
+    </div>
+
+    
+    <footer class="footer">
+        <div class="footer__inner">
+                <div class="copyright">
+                        <span>© 
+    2025
+ Luiz Mugnaini</span>
+                    <span class="copyright-theme">
+                        <span class="copyright-theme-sep">:: </span>
+                        Theme: <a href="https://github.com/pawroman/zola-theme-terminimal/">Terminimal</a> by pawroman
+                    </span>
+                </div>
+            </div>
+    </footer>
+    
+
+</div>
+</body>
+
+</html>
