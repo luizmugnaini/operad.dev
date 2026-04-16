@@ -21,7 +21,7 @@ taxonomies = [
 default_language = "en"
 
 [markdown.highlighting]
-theme = "ayu-dark"
+theme = "tokyo-night"
 
 [extra]
 # Put all your custom variables here
