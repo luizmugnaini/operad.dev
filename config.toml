@@ -21,7 +21,6 @@ taxonomies = [
 default_language = "en"
 
 [markdown.highlighting]
-style = "class"
 theme = "ayu-dark"
 
 [extra]
