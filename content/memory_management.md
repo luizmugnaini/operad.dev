@@ -1,52 +1,59 @@
 +++
-title = "Memory management strategies"
+title = "Practical memory management"
 date = 2024-11-25
 
 [taxonomies]
-tags = ["memory"]
+tags = ["programming"]
 +++
 
-In this post, I'll be detailing how C and C++ can be programmed in a sane and memory-safe way. We'll
-be going through some custom memory allocator strategies that provide simple ways of dissolving
-common memory problems.
-
-This post is inspired by my [C++ core library](https://git.sr.ht/~luizmugnaini/runtime),
-whose source code is freely available. The main goal of the library is to deliver the programming
-experience I wanted and C wasn't able to fully deliver.
+This post covers custom memory allocator strategies — arenas and stack allocators — that eliminate
+most common memory management problems in C and C++. The snippets shown here are simplified for
+clarity, drawn from a production codebase I work on that has to deal with real-time constraints.
 
 <!-- more -->
 
-Over the last few years C got the fame of being a memory unsafe language due to its lack of
-intrinsic constraints that ensure proper object lifetime and ownership management - like you
-commonly have in new trendy languages. You might ask why bother learning memory strategies in C if I
-can simply use my language Z that has a borrow-checker or a garbage collector: well, language Z is
-not suited for all use cases - surely not for me. The borrow-checker is a pain to deal with and most
-memory strategies in that land, like ECS, are based in making the compiler shut up by hiding
-intricate lifetimes inside of longer living objects. Do I even need to talk about the garbage
-collector approach?
+I need to make some things clear from the start:
+- None of what I'll be talking about is new. Many large codebases adopt this exact memory-management
+  design from the ground up.
+- My only goal here is to make this folk knowledge available to anyone looking to incorporate these
+  strategies.
+
+Over the last few years, C has been widely criticised for being memory unsafe — it lacks compiler
+constraints for object lifetime and ownership management that newer languages provide. Although
+intrinsically unsafe, you can build different allocation strategies that will deal with most of the
+problems for free. We'll provide memory safety through deliberate design rather than language-level
+enforcement. Most importantly, it doesn't have to be painful! The memory allocators I'll present are
+extremely easy to implement and manage. Rather than adding more complexity to your codebase, you'll
+be simplifying it. The cost of such approaches comes through discipline, and may change the way you
+handle problems in favour of batched processing, which is almost always a good thing to do.
 
 # Building your own memory system
 
-When writing any API, one should question himself the scope and the audience of the API. In the case
-of a memory management system, the main concern is centred in memory safety. How much safety guard-rails
-should we build, and how much hand-holding does our end-user need?
+When writing any API, one should consider the scope and the audience of the API. In the case of a
+memory management system, the main concern is centred on memory safety. How much safety guard-rails
+should we build?
 
-Guard-rails obviously comes with their own performance costs. For instance, if we wanted a very
-robust system that disallows for any use-after-free, we wouldn't be returning direct pointers to the
+Guard-rails obviously come with their own performance costs. For instance, if we wanted a very
+robust system that disallows any use-after-free, we wouldn't be returning direct pointers to the
 memory to our users. To deal with that, we could use handles and manage their coherence internally
 (check [this post](https://floooh.github.io/2018/06/17/handles-vs-pointers.html), by Andre
 Weissflog, for more information). This would require every allocation to have a unique ID, every
-read request to be checked if ID's match, etc.
+read request to be checked if IDs match, etc.
 
-In my personal case I don't really need all of this hand-holding and training-wheels. All I need is
-a performant system that can be easily managed, and ensures some level of memory safety. The
-[runtime library](https://git.sr.ht/~luizmugnaini/runtime) leans into this very philosophy -
-obvious protocols exist between caller and callee, if the caller wants to break one of the these
-protocol assumptions, the callee won't try to stop the caller fearing stupidity of the programmer.
-In summary, the programmer is always treated as an intelligent being that knows what they are doing.
-As simple and obvious as this philosophy may seem, the current state of the software industry took a
-turn in favor of lazyness, with the excuse that the "developer experience" is the king. I certainly
-don't follow this way of thinking, in fact: the end-user is the king, and performance is queen.
+In the majority of cases, my applications have strict requirements for real-time performance —
+adding a new layer of indirection is not an option. In order to meet these requirements we have to
+make a compromise: procedures establish protocols between the caller and callee, and correctness is
+upheld by convention rather than enforced at runtime. The allocator won't validate that you're using
+it correctly — that responsibility falls on the programmer. This is a deliberate tradeoff: we give
+up runtime safety checks in exchange for predictable, minimal-overhead memory operations. On the
+other hand, of course you can always write validation checks that are enabled only in debug mode -
+in fact, this is a common practice in our codebase, all protocols are established as code blocks
+that assert all assumptions that the function makes when dealing with the input.
+
+One warning regarding the allocators presented in this post: they are **not** implemented to be
+thread-safe. You can obviously implement a thread-safe version easily, however I prefer using these
+allocators in a per-thread basis rather than cross-threads - which avoids contentions, race
+conditions, and memory sync issues.
 
 # Alignment: rules for memory reads
 
@@ -68,7 +75,7 @@ Suppose I have a struct `Foo` that has the following memory layout:
 
 ```cpp
 struct Foo {
-    uint8_t* memory;
+    uint8_t *memory;
     uint32_t allocation_count;
     double   some_metric;
     float    some_other_metric;
@@ -81,7 +88,7 @@ alignment of each struct member is valid. Thus in reality, the arrangement of by
 
 ```cpp
 struct Foo {
-    uint8_t* memory;             // 8 bytes.
+    uint8_t *memory;             // 8 bytes.
     uint32_t allocation_count;   // 4 bytes.
     uint8_t  padding1[4];        // Inserted padding of 4 bytes.
     double   some_metric;        // 8 bytes.
@@ -108,7 +115,7 @@ sizes:
 
 ```cpp
 struct Foo {
-    uint8_t* memory;             // 8 bytes.
+    uint8_t *memory;             // 8 bytes.
     double   some_metric;        // 8 bytes.
     uint32_t allocation_count;   // 4 bytes.
     float    some_other_metric;  // 4 bytes.
@@ -127,7 +134,7 @@ space:
 
 ```cpp
 struct Arena {
-    uint8_t* memory;
+    uint8_t *buffer;
     size_t   capacity;
     size_t   offset;
 };
@@ -137,35 +144,32 @@ Having only this amount of information to deal with, the arena can only be used 
 allocations for a certain period and then free all of the allocated memory at once. This constraint
 is perfect for modelling the concept of a lifetime: objects allocated in the same arena, have a
 common lifetime end - that is, when the arena has its offset reset. This allows one to trivially
-deal with lifetime issues that languages like Rust try to impose in their compiler.
+deal with lifetime issues that languages like Rust enforce at the compiler level.
 
-It is to be noted that your style of programming with arenas may differ from the typical
-programming you see out there. It is common to see programs where ownership of memory is poorly
-defined in the course of the program lifetime. For this exact reason, people in the land of
-"Modern C++" resort to "smart" pointers - instead of solving the root cause, this "solution" only
-remedy the problem of a poorly designed software by means of runtime cost and, consequently,
-absurdly horrible performance.
+It is to be noted that your style of programming with arenas may differ from the typical programming
+you see out there. It is common to see programs where ownership of memory isn't strictly defined in
+the course of the program execution. For this exact reason, modern C++ codebases often use
+`shared_ptr` and reference counting — besides the overhead, this approach makes reasoning about
+lifetimes harder, not easier.
 
 When programming with arenas, one commonly thinks in groups of allocations (hence lifetime groups),
-and chunks of objects. Work is mainly done with these chunks in mind, improving cache spacial and
-temporal locality. This way of programming is sometimes named "data oriented programming", but
-in reality this is simply the way computers where designed to be used - we don't even need a term
-for that, it's merely non-pessimised programming if you think about it.
+and chunks of objects. Work is mainly done with these chunks in mind, improving cache spatial and
+temporal locality. This way of programming is sometimes named "data-oriented programming" — it aligns with how
+memory hierarchies are designed to be used.
 
-Many of the made-up problems created by modern software practices are completely dissolved when you
-design your program with memory arenas in mind instead of thinking about the program at the
-object-level. For instance, ownership and lifetime problems are almost a non-issue and an easy to
-solve problem.
+Many problems that arise from object-level memory management are eliminated when you
+design your program with memory arenas in mind. For instance, ownership and lifetime problems are
+almost a non-issue and an easy to solve problem.
 
 ## Allocating memory blocks
 
 When allocating a new block of memory in the arena, we have to account for the alignment of the
 structure or array that will be allocated. By the simplicity of the arena, computing the next
-address that satisfy the required alignment is a pretty simple task:
+address that satisfies the required alignment is a pretty simple task:
 
 ```cpp
-size_t align_forward(uintptr_t ptr_addr, size_t alignment) {
-    size_t mod_align = ptr_addr & (alignment - 1); // Same as `ptr_addr % alignment`
+uintptr_t align_forward(uintptr_t ptr_addr, size_t alignment) {
+    uintptr_t mod_align = ptr_addr & (alignment - 1); // Same as `ptr_addr % alignment`
     if (mod_align != 0) {
         ptr_addr += alignment - mod_align;
     }
@@ -175,15 +179,15 @@ size_t align_forward(uintptr_t ptr_addr, size_t alignment) {
 
 where the parameter `alignment` is assumed to be a power of two.
 
-Having this auxiliar function at hand, making a new allocation can be very easily done:
+Having this auxiliary function at hand, making a new allocation can be very easily done:
 
 ```cpp
-uint8_t* arena_alloc_align(Arena* arena, size_t size_bytes, uint32_t alignment) {
+uint8_t *arena_alloc_align(Arena *arena, size_t size_bytes, uint32_t alignment) {
     if (arena == nullptr || arena->capacity == 0 || size_bytes == 0) {
         return nullptr;
     }
 
-    uintptr_t memory_addr    = (uintptr_t)arena->buf;
+    uintptr_t memory_addr    = (uintptr_t)arena->buffer;
     uintptr_t new_block_addr = align_forward(memory_addr + arena->offset, alignment);
 
     if (new_block_addr + size_bytes > arena->capacity + memory_addr) {
@@ -194,15 +198,19 @@ uint8_t* arena_alloc_align(Arena* arena, size_t size_bytes, uint32_t alignment) 
     // Commit the new block of memory.
     arena->offset = (size_t)(size_bytes + new_block_addr - memory_addr);
 
-    uint8_t* new_block = (uint8_t*)new_block_addr;
-    memset(new_block, 0, size_bytes);
-
+    uint8_t *new_block = (uint8_t *)new_block_addr;
     return new_block;
 }
 ```
 
 You should also create procedures that deal with the following operations: clearing the arena,
 resizing an already allocated block of memory, etc.
+
+## Using an arena
+
+Most of the times, you can convert a solution involving dynamic allocations to fit the arena bump
+allocation pattern, sometimes you may not be able to do this easely or the conversion itself could
+not be beneficial. Here we
 
 ## Temporary allocations with checkpoints
 
@@ -214,22 +222,64 @@ onwards isn't needed anymore. This amounts to a simple implementation like the f
 
 ```cpp
 struct ArenaCheckpoint {
+    Arena *arena;
     size_t saved_offset;
 };
 
-ArenaCheckpoint arena_make_checkpoint(Arena* arena) {
-    return ArenaCheckpoint{arena->offset};
+ArenaCheckpoint arena_make_checkpoint(Arena *arena) {
+    return ArenaCheckpoint{arena, arena->offset};
 }
 
-void arena_restore_state(Arena* arena, ArenaCheckpoint* checkpoint) {
-    arena->offset = checkpoint->saved_offset;
+void arena_restore_state(ArenaCheckpoint checkpoint) {
+    checkpoint.arena->offset = checkpoint.saved_offset;
 }
 ```
 
-You can certainly extend the behaviour of checkpoints. For instance, you can create a kind
-auto-restoring checkpoint with the use of destructors. Moreover, I would recommend creating debug
-checks in order to ensure the correctness of the checkpoints being restored (e.g. does it come from
-the same arena? is the offset valid? etc.).
+You can certainly extend the behaviour of checkpoints. For instance, you can create a kind of
+auto-restoring checkpoint with the use of destructors if you are into that.
+
+Although extremely simple, checkpoints are one of the most useful constructs you can build on top of
+an arena allocator. Here I'll list two patterns that I use all of the time:
+
+- **Temporary work.** Sometimes, in order make some computation, you may require dynamic allocation:
+  ```cpp
+  ComputeResult compute_foo(Bar *bar, int bar_count, Arena *work_arena) {
+      ArenaCheckpoint work_checkpoint = arena_make_checkpoint(work_arena);
+
+      // `foobar` is used temporarily to compute `result`.
+      Array<int> foobar = array_make<int>(work_arena, bar_count);
+      for (int i = 0; i < bar_count; ++i) {
+          // Compute foobar[i].
+      }
+
+      ComputeResult result = {};
+      foobar_result(&foobar, &result);
+
+      arena_restore_checkpoint(work_checkpoint);
+      return result;
+  }
+  ```
+  If you don't like the fact that you have to remember to restore the checkpoint, you can implement
+  either a destructor for the checkpoint or add a `defer` macro that handles this.
+- **Lifetime as a parameter.** When using an arena allocator, you can mask from the callee the
+  actual life-time of the object they will allocate. The callee only has to know two things: does
+  the lifetime of this object starts and ends within my scope (temporary work), or does the lifetime
+  is started in their scope and its end is handled by the caller?
+
+  Consider, for instance, that you have an opaque pointer for the `GPUContext` of an application. The
+  actual definition of `GPUContext` has to be deferred to their corresponding backend implementation
+  file (e.g. `gpu_context_vulkan.cpp`) - hence the caller cannot simply instantiate `GPUContext`
+  on the stack, it has to be allocated at runtime. In order to create a new GPU context, the caller
+  passes an arena to `gpu_context_make` as the lifetime of the `GPUContext` itself:
+  ```cpp
+  GPUContext *gpu_context_make(Arena *persistent_arena) {
+      GPUContext *context = (GPUContext *)arena_alloc_align(persistent_arena, sizeof(GPUContext), alignof(GPUContext));
+
+      // Initialise the context ...
+
+      return context;
+  }
+  ```
 
 # Stack Allocator
 
@@ -243,7 +293,7 @@ Each memory block allocated by our stack allocator will be accompanied by a head
 some basic information about the memory block it's associated with.
 
 ```cpp
-struct StackAllocHeader {
+struct StackHeader {
     size_t padding;
     size_t capacity;
     size_t previous_offset;
@@ -255,8 +305,8 @@ Let me explain what each one of these fields mean:
 - `padding`: The offset relative to the *end* of the previously allocated memory block until the start
   of the current memory block. This is here due to the different alignment requirements of each block.
 - `capacity`: The total capacity, in bytes, of the current memory block.
-- `previous_offset`: The offset relative to the *start* of previously allocated block until the
-  start of the current memory block. This will help us to traverse the stack backwards.
+- `previous_offset`: The offset, relative to `buffer`, to the start of the previously allocated
+  memory block. This allows us to traverse the stack backwards.
 
 You can visualise the header members as follows:
 
@@ -275,16 +325,16 @@ On to the stack allocator proper! The basic layout of the allocator looks like t
 
 ```cpp
 struct Stack {
-    uint8_t* memory;
+    uint8_t *buffer;
     size_t   capacity;
     size_t   offset;
     size_t   previous_offset;
 };
 ```
-- `memory`: Pointer to the start of the memory block managed by the allocator.
+- `buffer`: Pointer to the start of the memory block managed by the allocator.
 - `capacity`: The maximum capacity in bytes of the allocator's memory block.
-- `offset`: The offset, relative to `memory`, to the start of the region available for allocations.
-- `previous_offset`: The offset, relative to `memory`, to the start of the last allocated memory block.
+- `offset`: The offset, relative to `buffer`, to the start of the region available for allocations.
+- `previous_offset`: The offset, relative to `buffer`, to the start of the last allocated memory block.
 
 This can be visualised by the following diagram:
 
@@ -295,15 +345,15 @@ This can be visualised by the following diagram:
   |header 1|memory 1|++++|header 2|memory 2|++free space++|
   ^                               ^                       ^
   |                               |                       |
-memory                         previous                  end
+buffer                         previous                  end
   |                             offset                    |
   |                                                       |
   |                                                       |
   |--------------------- capacity ------------------------|
 ```
 
-The allocator can be either the owner or merely the manager of the memory pointed by `Stack::memory`.
-In my runtime, I opted for using allocators as mere managers, so you need to initialise them with a
+The allocator can be either the owner or merely the manager of the memory pointed by `Stack::buffer`.
+In my case, I opted for using allocators as mere managers, so you need to initialise them with a
 valid pointer to a previously allocated block of memory.
 
 ## Allocating Blocks
@@ -328,26 +378,25 @@ In order to compute the padding needed by the block we can implement the followi
 
 ```c
 size_t padding_with_header(
-    uintptr_t  ptr_addr,
-    size_t     alignment,
-    size_t     header_size,
-    size_t     header_alignment) {
-    // Calculate the padding necessary for the new block of memory.
-    size_t padding   = 0;
-    size_t mod_align = ptr_addr & (alignment - 1);  // Same as `ptr_addr % alignment`.
+    uintptr_t ptr_addr,
+    size_t    alignment,
+    size_t    header_size,
+    size_t    header_alignment) {
+    if (alignment < header_alignment) {
+        alignment = header_alignment;
+    }
+
+    size_t padding = 0;
+    uintptr_t mod_align = ptr_addr & (alignment - 1);  // Same as `ptr_addr % alignment`.
     if (mod_align != 0) {
-        padding += alignment - mod_align;
-    }
-    ptr_addr += padding;
-
-    // Add the padding necessary for the header alignment.
-    size_t mod_header = ptr_addr & (header_alignment - 1);  // Same as `ptr_addr % header_alignment`.
-    if (mod_header != 0) {
-        padding += header_alignment - mod_header;
+        padding = alignment - mod_align;
     }
 
-    // The padding should at least be able to contain the header.
-    padding += header_size;
+    // Ensure there's enough space for the header before the block.
+    if (padding < header_size) {
+        size_t needed = header_size - padding;
+        padding += alignment * ((needed + alignment - 1) / alignment);
+    }
 
     return padding;
 }
@@ -359,7 +408,7 @@ of two.
 To allocate a new block of memory in the stack, we can proceed as follows:
 
 ```cpp
-uint8_t* stack_alloc_align(Stack* stack, size_t size_bytes, uint32_t alignment) {
+uint8_t *stack_alloc_align(Stack *stack, size_t size_bytes, uint32_t alignment) {
     size_t current_capacity = stack->capacity;
     size_t current_offset   = stack->offset;
 
@@ -367,7 +416,7 @@ uint8_t* stack_alloc_align(Stack* stack, size_t size_bytes, uint32_t alignment) 
         return nullptr;
     }
 
-    uint8_t* free_memory = stack->buf + current_offset;
+    uint8_t *free_memory = stack->buffer + current_offset;
 
     size_t padding = padding_with_header(
         (uintptr_t)free_memory,
@@ -380,10 +429,10 @@ uint8_t* stack_alloc_align(Stack* stack, size_t size_bytes, uint32_t alignment) 
     }
 
     // Address to the start of the new block of memory.
-    uint8_t* new_block = free_memory + padding;
+    uint8_t *new_block = free_memory + padding;
 
     // Write to the header associated with the new block of memory.
-    StackHeader* new_header     = (StackHeader*)(new_block - sizeof(StackHeader));
+    StackHeader *new_header     = (StackHeader *)(new_block - sizeof(StackHeader));
     new_header->padding         = padding;
     new_header->capacity        = size_bytes;
     new_header->previous_offset = stack->previous_offset;
@@ -392,7 +441,6 @@ uint8_t* stack_alloc_align(Stack* stack, size_t size_bytes, uint32_t alignment) 
     stack->previous_offset = current_offset + padding;
     stack->offset          = current_offset + padding + size_bytes;
 
-    memset(new_block, size_bytes, 0);
     return new_block;
 }
 ```
@@ -400,16 +448,13 @@ uint8_t* stack_alloc_align(Stack* stack, size_t size_bytes, uint32_t alignment) 
 # Final comments
 
 Manual memory management systems are actually quite fun and interesting. It is very simple to
-construct a consise, easy to use, safe, and performant memory system that will remove most of the
-common headaches created by bad software practices. It goes without saying that having a good memory
+construct a concise, easy to use, safe, and performant memory system that will remove most of the
+common headaches that arise from ad-hoc memory management. It goes without saying that having a good memory
 system frees you from dealing with individual lifetimes, ownership problems, and the paranoia that
 `malloc` will inherently generate when used throughout the codebase.
 
 Most of the time, all that you need is an arena. You can also combine the use of the arena with a
 stack allocator for more intricate memory arrangements.
-
-If you wish to see the actual implementation of these allocators in my runtime library, please
-refer to the [source code](https://git.sr.ht/~luizmugnaini/runtime).
 
 # Further reading material for the nerds
 

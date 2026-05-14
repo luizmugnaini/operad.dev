@@ -3,7 +3,7 @@ title = "radiant: a ray tracer"
 date = 2023-02-23
 
 [taxonomies]
-tags = ["graphics"]
+tags = ["programming", "side-project", "graphics"]
 +++
 
 This is a simple CPU-based ray-tracer following [_Ray Tracing in One Weekend_](https://raytracing.github.io/books/RayTracingInOneWeekend.html)

@@ -3,7 +3,7 @@ title = "exploring emulation with chirp 🐣: a CHIP-8 interpreter"
 date = 2023-02-23
 
 [taxonomies]
-tags = ["interpreter", "emulation"]
+tags = ["programming", "side-project", "emulation"]
 +++
 
 One of my long-term aspirations is to forge an emulator for the legendary [Game Boy](https://en.wikipedia.org/wiki/Game_Boy)
