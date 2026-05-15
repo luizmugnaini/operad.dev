@@ -262,9 +262,9 @@ an arena allocator. Here I'll list two patterns that I use all of the time:
   If you don't like the fact that you have to remember to restore the checkpoint, you can implement
   either a destructor for the checkpoint or add a `defer` macro that handles this.
 - **Lifetime as a parameter.** When using an arena allocator, you can mask from the callee the
-  actual life-time of the object they will allocate. The callee only has to know two things: does
+  actual lifetime of the object they will allocate. The callee only has to know two things: does
   the lifetime of this object starts and ends within my scope (temporary work), or does the lifetime
-  is started in their scope and its end is handled by the caller?
+  is started in my scope and its end is handled by the caller?
 
   Consider, for instance, that you have an opaque pointer for the `GPUContext` of an application. The
   actual definition of `GPUContext` has to be deferred to their corresponding backend implementation
