@@ -44,6 +44,13 @@ rendering, and physics simulations.
 - [Ravi Vakil](https://virtualmath1.stanford.edu/~vakil/) --- algebraic geometry.
 - [Tim Hosgood](https://thosgood.net/) --- algebraic geometry, homotopy theory, and translations of
   great texts.
+- [Timothy Gowers](https://gowers.wordpress.com/) --- combinatorics.
+- [Terrence Tao](https://terrytao.wordpress.com/) --- analysis and number theory.
+- [Peter May](https://math.uchicago.edu/~may/) --- algebraic topology and category theory.
+- [John Baez](https://math.ucr.edu/home/baez/) --- mathematical physics, quantum gravity, and
+  applied category theory.
+- [Urs Schreiber](https://ncatlab.org/nlab/show/Urs+Schreiber) --- quantum physics and algebraic
+  topology.
 
 ## Programming Blogs
 
@@ -81,6 +88,22 @@ rendering, and physics simulations.
 
 ## Selected Works
 
+### Mathematics Resources
+
+Here are some invaluable mathematics resources:
+
+- [An Infinitely Large Napkin](https://web.evanchen.cc/napkin.html), by Evan Chen --- an ever
+  growing text on mathematics, in the same nature as my [Deep Dive](../deep-dive) notes.
+- [The Stacks Project](https://stacks.math.columbia.edu/) --- an open source textbook and reference
+  work on algebraic geometry.
+- [Kerodon](https://kerodon.net/) --- online resource for homotopy-coherent mathematics.
+- [AMS Open Math Notes](https://www.ams.org/open-math-notes).
+- [The n-Category Café](https://golem.ph.utexas.edu/category/).
+- [n-Lab](https://ncatlab.org) --- a wiki for collaborative work on Mathematics, Physics, and Philosophy.
+- [1-Lab](https://1lab.dev/) --- accessible introduction to structuralist mathematics, formalised in
+  the setting of homotopy type theory.
+- [Homotopy Type Theory: Univalent foundations of Mathematics](https://homotopytypetheory.org/).
+
 ### Blog Posts
 
 - Casey Muratori's [Semantic Compression](https://caseymuratori.com/blog_0015) post.
@@ -88,3 +111,8 @@ rendering, and physics simulations.
 ### Series
 
 - Peter Shirley's [Ray Tracing in One Weekend](https://raytracing.github.io/) series.
+
+## Useful Tools
+
+- [Detexify](https://detexify.kirelabs.org/classify.html) --- draw a symbol and get its LaTeX equivalent.
+- [Quiver](https://q.uiver.app/) --- commutative diagram editor.
