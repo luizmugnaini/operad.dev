@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="{{ lang | default(value=config.default_language | default(value='en')) }}">
+{% include "partials/head.html" %}
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  {% include "partials/nav.html" %}
+  <main id="main" class="container content">
+    {% block content %}{% endblock content %}
+  </main>
+  {% include "partials/footer.html" %}
+</body>
+</html>

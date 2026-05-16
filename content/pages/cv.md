@@ -1,0 +1,71 @@
++++
+title = "Curriculum Vitae"
+description = "Luiz Mugnaini — Software developer, mathematician."
+path = "cv"
+template = "page.html"
++++
+
+<p class="cv-contact">
+<a href="mailto:luizmugnaini@gmail.com">luizmugnaini@gmail.com</a> ·
+<a href="https://linkedin.com/in/luizmug">linkedin.com/in/luizmug</a> ·
+<a href="/cv.pdf">PDF</a>
+</p>
+
+## Experience
+
+{% cvitem(
+    primary="Founder & Lead Developer",
+    secondary="Presheaf Studio",
+    date="April 2024 – Present",
+    location="São Paulo, Brazil") %}
+- Designing a native cross-platform application for professional digital sculpting based on my research on polygonal mesh retopology.
+- Creating novel SIMD-optimised algorithms with multi-threading capabilities for mesh editing.
+{% end %}
+
+{% cvitem(
+    primary="Software Development Engineer (SDE)",
+    secondary="Amazon",
+    date="February 2025 – Present",
+    location="São Paulo, Brazil") %}
+- Spearheaded an invoice processing system for the Indian government handling 1 million updates per day.
+- Led the implementation of the new transitive token security protocol for spec-compliancy of our global invoicing services.
+- Ported the legacy testing framework of Amazon's world-wide store-front website for all of our invoice solutions.
+- Worked on-call for our invoice pipeline with direct contact with both clients and third-party suppliers.
+{% end %}
+
+{% cvitem(
+    primary="Fullstack Python Contractor",
+    secondary="NDA startup",
+    date="June 2023 – March 2024",
+    location="São Paulo, Brazil") %}
+- Built a full web app for medical ultrasound courses hosted on Google Cloud.
+- Used FastAPI and HTMX with Jinja2 templates and Tailwind to build a fluid user experience.
+- Implemented user authentication using SQLite and a distributed asset versioning system using S3.
+{% end %}
+
+## Education
+
+{% cvitem(
+    primary="University of São Paulo",
+    secondary="Master's in Computer Graphics",
+    date="Aug. 2024 – Present",
+    location="São Paulo, Brazil") %}
+I research novel techniques for geometry processing of 3D meshes leveraging ideas from the growing field of Discrete Differential Geometry. As part of my work, I'm developing algorithms for better re-topology workflows.
+{% end %}
+
+{% cvitem(
+    primary="University of São Paulo",
+    secondary="BSc in Molecular Sciences",
+    gpa="9.2/10",
+    date="Jul. 2020 – Aug. 2024",
+    location="São Paulo, Brazil") %}
+Interdisciplinary scientific research in Computer Science and Mathematics, originating in combinatorial models of [Homotopy Theory](https://ncatlab.org/nlab/show/homotopy+theory), my studies evolved into the discretization of continuous surfaces and its applications to Computer Graphics. This led me into researching differential methods for the geometry processing of polygonal meshes. I've documented all of my studies in a [comprehensive compendium of Mathematics and Computer Science](/deep-dive.pdf).
+
+Relevant course-work: Algorithms, Data Structures, Computer Graphics, Differential Geometry, Algebraic Topology.
+{% end %}
+
+## Technical Skills
+
+**Programming languages:** C++, C, Rust, Python, Lua, Java, Typescript, Javascript.
+
+**Libraries:** Modern C++ STL, C11 stdlib, WinAPI, Linux ABI, Vulkan, OpenGL, SDL.

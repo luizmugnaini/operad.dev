@@ -1,0 +1,26 @@
+# math-preamble.toml
+#
+# Site-wide LaTeX macros for KaTeX, merged into every page that opts into
+# math (extra.math = true). Per-page [extra.macros] in front-matter override
+# entries here on key collision.
+#
+# Use single-quoted TOML strings so backslashes don't need to be doubled.
+# Anything you'd put in a LaTeX \newcommand belongs here.
+
+[macros]
+'\R' = '\mathbf{R}'
+'\C' = '\mathbf{C}'
+'\Z' = '\mathbf{Z}'
+'\N' = '\mathbf{N}'
+'\Q' = '\mathbf{Q}'
+
+'\cat' = '\texttt{#1}'
+
+'\abs'    = '\left| #1 \right|'
+'\norm'   = '\left\| #1 \right\|'
+'\set'    = '\{\, #1 \,\}'
+'\bra'    = '\langle #1 \rvert'
+'\ket'    = '\lvert #1 \rangle'
+'\braket' = '\langle #1 \mid #2 \rangle'
+
+'\iso' = '\simeq'

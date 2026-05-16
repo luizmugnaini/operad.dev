@@ -1,0 +1,409 @@
+// _content.scss — everything inside .prose, plus post/list/section chrome.
+//
+// Layout: a single page-wide measure (--measure, ~72rem) is shared by all
+// blocks — prose, code, headers, listings. There is no breakout column:
+// prose lines and code lines fill the same width.
+
+// --- Long-form prose ---
+.prose {
+  // Links
+  a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 0.06em;
+    text-underline-offset: 0.16em;
+
+    &:hover {
+      text-decoration-thickness: 0.12em;
+    }
+  }
+
+  // Lists
+  ul, ol {
+    margin: 0 0 1em;
+    padding-left: 1.6em;
+  }
+  li + li {
+    margin-top: 0.25em;
+  }
+
+  // Headings inside prose
+  h2 {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 0.2em;
+  }
+
+  // Inline code
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: var(--tint);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+  }
+
+  // Code blocks. We let syntect's inline `background-color` win for highlighted
+  // blocks; --tint is the fallback for plain ``` blocks.
+  pre {
+    background: var(--tint);
+    padding: 1rem 1.1rem;
+    overflow-x: auto;
+    border-radius: 3px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    margin: 1.25em 0;
+
+    code {
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
+      font-size: inherit;
+    }
+  }
+
+  // Blockquote
+  blockquote {
+    margin: 1.5em 0;
+    padding: 0.2em 1.1em;
+    border-left: 3px solid var(--accent);
+    color: var(--muted);
+    font-style: italic;
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // Tables
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5em 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border-bottom: 1px solid var(--rule);
+    padding: 0.5em 0.75em;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    font-weight: 700;
+  }
+
+  // Bare images inside prose (most images go through the figure shortcode)
+  img {
+    margin: 1.5em auto;
+  }
+
+  // Horizontal rule
+  hr {
+    width: 5rem;
+    margin: 2.5rem auto;
+    border: 0;
+    border-top: 1px solid var(--rule);
+  }
+}
+
+// --- Figures (figure shortcode) ---
+.figure {
+  margin: 1.75em 0;
+  text-align: center;
+}
+
+.figure img {
+  margin: 0 auto;
+}
+
+.figure__caption {
+  font-size: 0.9em;
+  color: var(--muted);
+  margin-top: 0.6em;
+  font-style: italic;
+}
+
+.figure--left {
+  text-align: left;
+
+  img { margin-left: 0; }
+}
+
+.figure--right {
+  text-align: right;
+
+  img { margin-right: 0; }
+}
+
+// --- Post header & meta ---
+.post-header {
+  margin-bottom: 1.75rem;
+}
+
+.post-title {
+  font-size: 2.1rem;
+  margin: 0.2em 0 0.5em;
+  line-height: 1.2;
+}
+
+.post-meta {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+}
+
+.post-meta time {
+  white-space: nowrap;
+}
+
+.post-meta__updated {
+  font-style: italic;
+}
+
+// --- Post pager (prev/next within a section) ---
+.post-pager {
+  margin-top: 3rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.post-pager a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.post-pager__next {
+  margin-left: auto;
+  text-align: right;
+}
+
+// --- Section header ---
+.section-header {
+  margin-bottom: 2rem;
+}
+
+.section-header__title {
+  margin: 0 0 0.4em;
+}
+
+.section-header__lede {
+  color: var(--muted);
+  margin: 0;
+}
+
+// --- Post list (used on index, sections, archive, tags/single) ---
+.post-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.post-list-item {
+  padding: 0.7em 0;
+  border-bottom: 1px solid var(--rule);
+  display: grid;
+  grid-template-columns: 6.5em 1fr;
+  gap: 0.4rem 1rem;
+  align-items: baseline;
+}
+
+.post-list-item time {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.post-list-item__title {
+  color: var(--ink);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.post-list-item__tags {
+  grid-column: 2;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+// --- Tags ---
+.tag {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--muted);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.tag-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.25rem;
+  font-family: var(--font-mono);
+}
+
+.tag-list a {
+  color: var(--ink);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.tag-list__count {
+  color: var(--muted);
+  margin-left: 0.25em;
+}
+
+// --- Pagination ---
+.pagination {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.pagination a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.pagination__next {
+  margin-left: auto;
+}
+
+// --- Front page intro ---
+.intro {
+  margin-bottom: 2.5rem;
+}
+
+.intro__tagline {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 1.05rem;
+  margin: 0 0 1em;
+}
+
+// --- Home page grid: post list + tag sidebar ---
+.home-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem 3rem;
+  align-items: start;
+
+  @media (max-width: 800px) {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+.sidebar {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-width: 8rem;
+
+  // Sticky on tall viewports so it stays visible while scrolling the list.
+  position: sticky;
+  top: 1rem;
+}
+
+.sidebar__label {
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.sidebar__tag {
+  // Inherits .tag base; just enough to ensure each item sits on its own line.
+}
+
+.all-posts__heading {
+  font-size: 0.95rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+  margin: 2rem 0 0.5rem;
+}
+
+// --- CV page ---
+.cv-contact {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0 0 1.5rem;
+
+  a { color: var(--accent); }
+}
+
+.cv-item {
+  margin: 1.4em 0 1.6em;
+}
+
+.cv-item__head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem 1.5rem;
+  align-items: baseline;
+  margin-bottom: 0.4em;
+}
+
+.cv-item__right {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.cv-item__gpa {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+.cv-item__body {
+  margin-top: 0.3em;
+  font-size: 0.97em;
+
+  ul, ol {
+    margin: 0.2em 0 0;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .cv-item__head {
+    grid-template-columns: 1fr;
+  }
+  .cv-item__right {
+    text-align: left;
+    white-space: normal;
+  }
+}

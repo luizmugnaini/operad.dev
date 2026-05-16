@@ -1,0 +1,9 @@
+// main.scss — single entry point compiled by Zola to /main.css.
+// Order matters: palette & reset before everything else.
+@import "palette";
+@import "reset";
+@import "typography";
+@import "layout";
+@import "content";
+@import "math";
+@import "print";

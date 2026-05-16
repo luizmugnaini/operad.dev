@@ -1,0 +1,26 @@
+// _palette.scss — paper light & soft dark, driven by `prefers-color-scheme`.
+//
+// One accent (oxblood) lives across both modes; everything else shifts.
+// No JS toggle, no localStorage, no flash — the OS decides.
+
+:root {
+  --bg:        #faf6ee;            // warm off-white "paper"
+  --ink:       #1b1b1b;            // near-black for body text
+  --muted:     #5a5856;            // metadata, secondary text
+  --rule:      #d8d2c4;            // dividers, borders
+  --tint:      rgba(27, 27, 27, 0.04); // subtle code-block background
+  --accent:    #7a2e2a;            // oxblood — links and emphasis
+  --accent-bg: rgba(122, 46, 42, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:        #14141a;          // not pure black; warmer
+    --ink:       #e7e2d6;
+    --muted:     #9b9690;
+    --rule:      #2a2a32;
+    --tint:      rgba(231, 226, 214, 0.05);
+    --accent:    #d98a86;          // brighter oxblood for contrast
+    --accent-bg: rgba(217, 138, 134, 0.10);
+  }
+}

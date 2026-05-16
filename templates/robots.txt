@@ -1,0 +1,78 @@
+# robots.txt — generated from templates/robots.txt by Zola.
+#
+# Default policy: allow standard search engines and humans.
+# Explicitly opt out of AI training and scraping crawlers.
+
+User-agent: *
+Disallow:
+Allow: /
+
+Sitemap: {{ get_url(path='sitemap.xml') | safe }}
+
+# --- AI training / scraping opt-out ---
+# OpenAI
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+# Anthropic
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: claude-web
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+# Google AI training (separate from Googlebot for search)
+User-agent: Google-Extended
+Disallow: /
+
+# Common Crawl — feeds many AI training datasets
+User-agent: CCBot
+Disallow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Disallow: /
+
+# Apple AI training (separate from Applebot for search)
+User-agent: Applebot-Extended
+Disallow: /
+
+# Amazon
+User-agent: Amazonbot
+Disallow: /
+
+# Meta
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+# ByteDance / TikTok
+User-agent: Bytespider
+Disallow: /
+
+# Cohere
+User-agent: cohere-ai
+Disallow: /
+
+# Image scrapers used for training
+User-agent: ImagesiftBot
+Disallow: /
+
+# Diffbot — sells scraped data to AI companies
+User-agent: Diffbot
+Disallow: /
+
+# Webz.io / omgili
+User-agent: omgilibot
+Disallow: /

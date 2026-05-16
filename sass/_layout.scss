@@ -1,0 +1,107 @@
+// _layout.scss — page chrome (container, header, nav, footer).
+// Keep it minimal: single column, ~68ch measure, flush left.
+
+.container {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+// Skip link for keyboard users.
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--accent);
+  color: var(--bg);
+  padding: 0.5rem 0.75rem;
+  z-index: 100;
+
+  &:focus {
+    left: 0.5rem;
+    top: 0.5rem;
+  }
+}
+
+// --- Site header ---
+.site-header {
+  border-bottom: 1px solid var(--rule);
+  padding: 1.25rem 0;
+  margin-bottom: 2.5rem;
+}
+
+.site-header__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.wordmark__icon {
+  width: 1em;
+  height: 1em;
+  flex: none;
+}
+
+.site-nav ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding: 0;
+  margin: 0;
+}
+
+.site-nav a {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--muted);
+  text-decoration: none;
+
+  &:hover,
+  &:focus {
+    color: var(--accent);
+  }
+}
+
+// --- Main ---
+main.content {
+  padding-bottom: 1rem;
+}
+
+// --- Site footer ---
+.site-footer {
+  border-top: 1px solid var(--rule);
+  margin-top: 4rem;
+  padding: 1.5rem 0 2rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.site-footer p {
+  margin: 0;
+  text-align: center;
+}
+
+.site-footer a {
+  color: inherit;
+  text-decoration: underline;
+
+  &:hover {
+    color: var(--accent);
+  }
+}

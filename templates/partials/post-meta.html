@@ -1,0 +1,19 @@
+{# Macros for rendering post metadata. Imported as `meta` in templates. #}
+
+{% macro post_meta(page) %}
+<div class="post-meta">
+  {%- if page.date %}
+  <time datetime="{{ page.date | date(format='%Y-%m-%d') }}">{{ page.date | date(format='%Y-%m-%d') }}</time>
+  {%- endif %}
+  {%- if page.updated %}
+  <span class="post-meta__updated">updated <time datetime="{{ page.updated | date(format='%Y-%m-%d') }}">{{ page.updated | date(format='%Y-%m-%d') }}</time></span>
+  {%- endif %}
+  {%- if page.taxonomies and page.taxonomies.tags %}
+  <span class="post-meta__tags">
+    {%- for tag in page.taxonomies.tags | sort | unique(case_sensitive=false) %}
+    <a class="tag" href="{{ get_taxonomy_url(kind='tags', name=tag) | safe }}">#{{ tag }}</a>{%- if not loop.last %} {% endif %}
+    {%- endfor %}
+  </span>
+  {%- endif %}
+</div>
+{% endmacro post_meta %}

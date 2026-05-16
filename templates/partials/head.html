@@ -1,0 +1,91 @@
+{# --- Build a sensible page title --- #}
+{%- set page_title = "" -%}
+{%- if page and page.title -%}
+  {%- set page_title = page.title -%}
+{%- elif section and section.title -%}
+  {%- set page_title = section.title -%}
+{%- elif term and term.name -%}
+  {%- set page_title = "Tag: " ~ term.name -%}
+{%- endif -%}
+
+{# --- Resolve a description for OG/meta --- #}
+{%- set description = config.description | default(value="") -%}
+{%- if section and section.description %}{% set description = section.description %}{% endif -%}
+{%- if page and page.description %}{% set description = page.description %}{% endif -%}
+
+{# --- Canonical URL --- #}
+{%- set canonical_url = current_url | default(value=config.base_url) -%}
+
+{# --- Does this page opt into KaTeX runtime? --- #}
+{%- set wants_math = false -%}
+{%- if page and page.extra and page.extra.math %}{% set wants_math = true %}{% endif -%}
+{%- if section and section.extra and section.extra.math %}{% set wants_math = true %}{% endif -%}
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <title>{% if page_title %}{{ page_title }} — {% endif %}{{ config.title }}</title>
+
+  {% if description %}<meta name="description" content="{{ description }}">{% endif %}
+  {% if config.extra.author %}<meta name="author" content="{{ config.extra.author }}">{% endif %}
+
+  <link rel="canonical" href="{{ canonical_url | safe }}">
+
+  {# --- OpenGraph (light, no Twitter card extras) --- #}
+  <meta property="og:title" content="{% if page_title %}{{ page_title }}{% else %}{{ config.title }}{% endif %}">
+  {% if description %}<meta property="og:description" content="{{ description }}">{% endif %}
+  <meta property="og:type" content="{% if page %}article{% else %}website{% endif %}">
+  <meta property="og:url" content="{{ canonical_url | safe }}">
+  <meta property="og:site_name" content="{{ config.title }}">
+
+  {# --- Stylesheet --- #}
+  <link rel="stylesheet" href="{{ get_url(path='main.css', trailing_slash=false, cachebust=true) | safe }}">
+
+  {# --- Feed discovery --- #}
+  {%- if config.generate_feeds %}
+    {%- for ff in config.feed_filenames %}
+      {%- set ftype = "atom+xml" -%}
+      {%- if "rss" in ff %}{% set ftype = "rss+xml" %}{% endif -%}
+  <link rel="alternate" type="application/{{ ftype }}" href="{{ get_url(path=ff) | safe }}" title="{{ config.title }}">
+    {%- endfor %}
+  {%- endif %}
+
+  {# --- Favicon (SVG) --- #}
+  {%- if config.extra.favicon %}
+  <link rel="icon" type="{{ config.extra.favicon_mimetype | default(value='image/x-icon') | safe }}" href="{{ config.extra.favicon | safe }}">
+  {%- endif %}
+
+  {# --- Conditional KaTeX (only on pages that opt in via extra.math = true). --- #}
+  {%- if wants_math %}
+    {# Build JSON strings for the site-wide and per-page macro tables. Both
+       default to "{}" so Object.assign always has valid arguments. Per-page
+       macros override site-wide on key collision. #}
+    {%- set site_macros_json = "{}" -%}
+    {%- set preamble = load_data(path="math-preamble.toml", format="toml", required=false) -%}
+    {%- if preamble and preamble.macros %}{% set site_macros_json = preamble.macros | json_encode %}{% endif -%}
+    {%- set page_macros_json = "{}" -%}
+    {%- if page and page.extra and page.extra.macros %}{% set page_macros_json = page.extra.macros | json_encode %}{% endif -%}
+    {%- if section and section.extra and section.extra.macros %}{% set page_macros_json = section.extra.macros | json_encode %}{% endif -%}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      renderMathInElement(document.body, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "\\(", right: "\\)", display: false },
+          { left: "$",  right: "$",  display: false }
+        ],
+        macros: Object.assign({}, {{ site_macros_json | safe }}, {{ page_macros_json | safe }}),
+        throwOnError: false
+      });
+    });
+  </script>
+  {%- endif %}
+
+  {%- block head_extra %}{% endblock %}
+</head>

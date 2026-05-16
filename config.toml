@@ -1,67 +1,44 @@
 base_url = "https://operad.dev"
-title = "Mugnaini's blog"
+title = "operad.dev"
+description = "Notes on mathematics & programming — Luiz Mugnaini."
+default_language = "en"
 
-# Whether to automatically compile all Sass files in the sass directory
+# Compile Sass from sass/ to public/.
 compile_sass = true
 
-# RSS support.
-# generate_feeds = true
-# feed_filenames = ["rss.xml"]
-# feed_filename = "rss.xml"
+# RSS / Atom feeds.
+generate_feeds = true
+feed_filenames = ["atom.xml"]
 
-theme = "terminimal"
-
-# Whether to build a search index to be used later on by a JavaScript library
-build_search_index = true
+# No JS-based search; tags + the archive page are enough at this scale.
+build_search_index = false
 
 taxonomies = [
-    {name = "tags"},
+    { name = "tags", feed = true },
 ]
 
-default_language = "en"
+[markdown]
+smart_punctuation = true
 
 [markdown.highlighting]
 theme = "tokyo-night"
 
 [extra]
-# Put all your custom variables here
-
-accent_color = "pink"
-background_color = "blue"
-
-logo_text = "Mugnaini's blog"
-
 author = "Luiz Mugnaini"
+wordmark = "operad.dev"
+tagline = "Notes on mathematics & programming."
 
-# $BASE_URL is going to be substituted by base_url from configuration
-menu_items = [
-    {name = "blog", url = "$BASE_URL"},
-    {name = "about", url = "$BASE_URL/about"},
-    {name = "cv", url = "/luiz_mugnaini_cv.pdf", newtab = true},
-    {name = "code", url = "https://git.sr.ht/~luizmugnaini", newtab = true},
-    {name = "tags", url = "$BASE_URL/tags"},
-    {name = "archive", url = "$BASE_URL/archive"},
-    {name = "misc", url = "$BASE_URL/misc"},
-]
-
-# Whether to show links to earlier and later posts
-# on each post page (defaults to true).
-enable_post_view_navigation = true
-
-post_view_navigation_prompt = "Read more"
-
-use_full_hack_font = true
-
+# Favicon — reused as the inline wordmark icon in the top bar.
 favicon = "/favicon_knot-192x192.png"
 favicon_mimetype = "image/png"
 
-# Optional: Set how <title> elements are rendered.
-# Values:
-# - "main_only" -- only the main title (`config.title`) is rendered.
-# - "page_only" -- only the page title (if defined) is rendered,
-#                  falling back to `config.title` if not defined or empty.
-# - "combined" -- combine like so: "page_title | main_title",
-#                 or if page_title is not defined or empty, fall back to `main_title`
-#
-# Note that the main (index) page only has the main title.
-page_titles = "main_only"
+# Top-level navigation.
+# - Internal paths begin with `/` and are resolved against base_url at render time.
+# - External links are flagged with `external = true` (open in a new tab).
+menu = [
+    { name = "notes", url = "/" },
+    { name = "about", url = "/about" },
+    { name = "links", url = "/links" },
+    { name = "cv",    url = "/cv" },
+    { name = "code",  url = "https://git.sr.ht/~luizmugnaini", external = true },
+]

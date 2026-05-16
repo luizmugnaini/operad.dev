@@ -1,0 +1,13 @@
+// _math.scss — overrides for KaTeX rendered output.
+// These rules are harmless on pages that don't load KaTeX.
+
+.katex {
+  font-size: 1em;
+}
+
+.katex-display {
+  margin: 1.25em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25em 0;
+}

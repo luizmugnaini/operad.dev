@@ -1,5 +1,5 @@
 +++
-title = "Practical memory management"
+title = "Practical Memory Management"
 date = 2024-11-25
 
 [taxonomies]
@@ -19,9 +19,9 @@ I need to make some things clear from the start:
   strategies.
 
 Over the last few years, C has been widely criticised for being memory unsafe — it lacks compiler
-constraints for object lifetime and ownership management that newer languages provide. Although
-intrinsically unsafe, you can build different allocation strategies that will deal with most of the
-problems for free. We'll provide memory safety through deliberate design rather than language-level
+constraints for object lifetime and ownership semantics that newer languages provide. Although that's
+true, you can still build different allocation strategies that will deal with most of these memory
+issues for free. We'll provide memory safety through deliberate design rather than language-level
 enforcement. Most importantly, it doesn't have to be painful! The memory allocators I'll present are
 extremely easy to implement and manage. Rather than adding more complexity to your codebase, you'll
 be simplifying it. The cost of such approaches comes through discipline, and may change the way you
@@ -30,7 +30,7 @@ handle problems in favour of batched processing, which is almost always a good t
 # Building your own memory system
 
 When writing any API, one should consider the scope and the audience of the API. In the case of a
-memory management system, the main concern is centred on memory safety. How much safety guard-rails
+memory management system, the main concern is centred on memory safety. How many safety guard-rails
 should we build?
 
 Guard-rails obviously come with their own performance costs. For instance, if we wanted a very
@@ -44,21 +44,21 @@ In the majority of cases, my applications have strict requirements for real-time
 adding a new layer of indirection is not an option. In order to meet these requirements we have to
 make a compromise: procedures establish protocols between the caller and callee, and correctness is
 upheld by convention rather than enforced at runtime. The allocator won't validate that you're using
-it correctly — that responsibility falls on the programmer. This is a deliberate tradeoff: we give
+it correctly — that responsibility falls on the programmer. This is a deliberate trade-off: we give
 up runtime safety checks in exchange for predictable, minimal-overhead memory operations. On the
-other hand, of course you can always write validation checks that are enabled only in debug mode -
+other hand, of course you can always write validation checks that are enabled only in debug mode ---
 in fact, this is a common practice in our codebase, all protocols are established as code blocks
 that assert all assumptions that the function makes when dealing with the input.
 
 One warning regarding the allocators presented in this post: they are **not** implemented to be
 thread-safe. You can obviously implement a thread-safe version easily, however I prefer using these
-allocators in a per-thread basis rather than cross-threads - which avoids contentions, race
+allocators in a per-thread basis rather than cross-threads --- which avoids contentions, race
 conditions, and memory sync issues.
 
 # Alignment: rules for memory reads
 
 The CPU memory reads cannot be done willy nilly at any given address. Modern architectures are
-optimised to read contiguous memory with a certain alignment - which makes stepping through memory a
+optimised to read contiguous memory with a certain alignment --- which makes stepping through memory a
 regular task (as opposed to jumping around randomly). This alignment is always a power of two and
 depends on the size of the memory units (e.g. a struct member) we want to read. In C++ you can query
 the memory alignment for a given type `T` using `alignof(T)` (in C, you can use `_Alignof(T)`).
@@ -106,7 +106,7 @@ exceptions to be thrown.
 
 One thing I didn't explain is why the compiler has to put those 4 bytes of padding after the last
 structure member. If for some reason you have a contiguous array of `Foo` instances, in order to
-traverse through the array we would use the alignment of `Foo` (8 bytes) - and if it wasn't for
+traverse through the array we would use the alignment of `Foo` (8 bytes) --- and if it wasn't for
 those last 4 bytes, the address of the next `Foo` instance would be misaligned! Once again, the
 compiler has to account for the worst case scenario.
 
@@ -127,7 +127,7 @@ account for the necessary alignment restrictions.
 
 # Arena Allocator
 
-The simplest allocator - yet sufficient for almost all use-cases - is the *arena memory allocator*.
+The simplest allocator --- yet sufficient for almost all use-cases --- is the *arena memory allocator*.
 Its construction is ridiculously simple: a pointer to the block of memory being managed, the total
 maximum capacity of the block, and an offset relative to the start of the block to the free
 space:
@@ -143,7 +143,7 @@ struct Arena {
 Having only this amount of information to deal with, the arena can only be used to accumulate
 allocations for a certain period and then free all of the allocated memory at once. This constraint
 is perfect for modelling the concept of a lifetime: objects allocated in the same arena, have a
-common lifetime end - that is, when the arena has its offset reset. This allows one to trivially
+common lifetime end --- that is, when the arena has its offset reset. This allows one to trivially
 deal with lifetime issues that languages like Rust enforce at the compiler level.
 
 It is to be noted that your style of programming with arenas may differ from the typical programming
@@ -154,12 +154,12 @@ lifetimes harder, not easier.
 
 When programming with arenas, one commonly thinks in groups of allocations (hence lifetime groups),
 and chunks of objects. Work is mainly done with these chunks in mind, improving cache spatial and
-temporal locality. This way of programming is sometimes named "data-oriented programming" — it aligns with how
+temporal locality. This way of programming is sometimes called "data-oriented programming" — it aligns with how
 memory hierarchies are designed to be used.
 
 Many problems that arise from object-level memory management are eliminated when you
 design your program with memory arenas in mind. For instance, ownership and lifetime problems are
-almost a non-issue and an easy to solve problem.
+almost a non-issue and an easy-to-solve problem.
 
 ## Allocating memory blocks
 
@@ -206,12 +206,6 @@ uint8_t *arena_alloc_align(Arena *arena, size_t size_bytes, uint32_t alignment) 
 You should also create procedures that deal with the following operations: clearing the arena,
 resizing an already allocated block of memory, etc.
 
-## Using an arena
-
-Most of the times, you can convert a solution involving dynamic allocations to fit the arena bump
-allocation pattern, sometimes you may not be able to do this easely or the conversion itself could
-not be beneficial. Here we
-
 ## Temporary allocations with checkpoints
 
 Having the constraint of only being able to free all memory at once can be a bad restriction once
@@ -241,7 +235,7 @@ auto-restoring checkpoint with the use of destructors if you are into that.
 Although extremely simple, checkpoints are one of the most useful constructs you can build on top of
 an arena allocator. Here I'll list two patterns that I use all of the time:
 
-- **Temporary work.** Sometimes, in order make some computation, you may require dynamic allocation:
+- **Temporary work.** Sometimes, in order to make some computation, you may require dynamic allocation:
   ```cpp
   ComputeResult compute_foo(Bar *bar, int bar_count, Arena *work_arena) {
       ArenaCheckpoint work_checkpoint = arena_make_checkpoint(work_arena);
@@ -263,12 +257,12 @@ an arena allocator. Here I'll list two patterns that I use all of the time:
   either a destructor for the checkpoint or add a `defer` macro that handles this.
 - **Lifetime as a parameter.** When using an arena allocator, you can mask from the callee the
   actual lifetime of the object they will allocate. The callee only has to know two things: does
-  the lifetime of this object starts and ends within my scope (temporary work), or does the lifetime
-  is started in my scope and its end is handled by the caller?
+  the object's lifetime start and end within my scope (temporary work), or does it start in my
+  scope and end in the caller's?
 
-  Consider, for instance, that you have an opaque pointer for the `GPUContext` of an application. The
+  Consider, for instance, that you have an opaque pointer to the `GPUContext` of an application. The
   actual definition of `GPUContext` has to be deferred to their corresponding backend implementation
-  file (e.g. `gpu_context_vulkan.cpp`) - hence the caller cannot simply instantiate `GPUContext`
+  file (e.g. `gpu_context_vulkan.cpp`) --- hence the caller cannot simply instantiate `GPUContext`
   on the stack, it has to be allocated at runtime. In order to create a new GPU context, the caller
   passes an arena to `gpu_context_make` as the lifetime of the `GPUContext` itself:
   ```cpp

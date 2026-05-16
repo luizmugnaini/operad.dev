@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% import "partials/post-list-item.html" as item %}
+
+{% block content %}
+<header class="section-header">
+  <h1 class="section-header__title">tag: #{{ term.name }}</h1>
+  <p class="section-header__lede"><a href="{{ get_url(path='tags') | safe }}">all tags</a></p>
+</header>
+
+{% if term.pages | length > 0 %}
+<ul class="post-list">
+  {% for p in term.pages %}{{ item::list_item(page=p) }}{% endfor %}
+</ul>
+{% endif %}
+{% endblock content %}

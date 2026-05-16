@@ -1,0 +1,38 @@
+{#
+  cvitem shortcode — one entry on the CV page (experience / education /
+  project). Two-column header (primary block on the left, date+location on
+  the right) with a markdown body underneath for bullets or a description.
+
+  Usage:
+
+    {% cvitem(
+        primary="Software Development Engineer",
+        secondary="Amazon",
+        date="Feb 2025 – Present",
+        location="São Paulo, Brazil") %}
+    - Bullet 1
+    - Bullet 2
+    {% end %}
+
+  All args except `primary` are optional. `gpa` adds an italic "(GPA x)"
+  annotation next to `secondary` for education entries. Inline markdown
+  works in `primary` and `secondary`, so links like `[runtime](https://…)`
+  are rendered.
+#}
+<div class="cv-item">
+  <div class="cv-item__head">
+    <div class="cv-item__left">
+      <strong>{{ primary | markdown(inline=true) | safe }}</strong>
+      {%- if secondary %}<br><em>{{ secondary | markdown(inline=true) | safe }}</em>{% if gpa %} <span class="cv-item__gpa">(GPA {{ gpa }})</span>{% endif %}{% endif -%}
+    </div>
+    <div class="cv-item__right">
+      {%- if location %}<div>{{ location }}</div>{% endif -%}
+      {%- if date %}<div><em>{{ date }}</em></div>{% endif -%}
+    </div>
+  </div>
+  {%- if body %}
+  <div class="cv-item__body">
+{{ body | trim | markdown(inline=false) | safe }}
+  </div>
+  {%- endif %}
+</div>

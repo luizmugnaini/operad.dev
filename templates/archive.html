@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% import "partials/post-list-item.html" as item %}
+
+{# Full chronological archive — referenced from content/pages/archive.md. #}
+
+{% block content %}
+<header class="section-header">
+  <h1 class="section-header__title">{{ page.title | default(value="Archive") }}</h1>
+</header>
+
+{% set root = get_section(path="_index.md") %}
+
+{% if root.pages | length > 0 %}
+<ul class="post-list">
+  {% for p in root.pages %}{{ item::list_item(page=p) }}{% endfor %}
+</ul>
+{% endif %}
+{% endblock content %}

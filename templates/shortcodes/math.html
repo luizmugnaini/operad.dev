@@ -1,0 +1,26 @@
+{#
+  math shortcode — display math with optional caption.
+
+  Usage (block form):
+
+    {% math(caption="The square commutes.") %}
+    \begin{CD}
+    A @>f>> B \cr
+    @V{\iso}VV @VV{\iso}V \cr
+    C @>>g> D
+    \end{CD}
+    {% end %}
+
+  Tip: prefer `\cr` over `\\` for row breaks — `\cr` survives markdown
+  escape processing without needing to be doubled.
+#}
+<figure class="figure figure--math">
+
+$$
+{{ body | trim | safe }}
+$$
+
+{%- if caption %}
+<figcaption class="figure__caption">{{ caption | markdown(inline=true) | safe }}</figcaption>
+{%- endif %}
+</figure>

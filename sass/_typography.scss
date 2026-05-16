@@ -1,0 +1,63 @@
+// _typography.scss — system font stacks; zero font downloads.
+
+:root {
+  --font-serif:
+    "Charter", "Iowan Old Style", "Source Serif Pro", "Source Serif 4",
+    "Hoefler Text", "Sitka Text", Georgia, "Times New Roman", serif;
+
+  --font-mono:
+    "JetBrains Mono", "SF Mono", "Hack", Menlo, Consolas,
+    "DejaVu Sans Mono", "Liberation Mono", monospace;
+
+  --font-size-base: 1.0625rem; // ~17px on default browsers
+  --line-height: 1.6;
+
+  // Single column width shared by prose and code blocks.
+  // Sized to fit 120-char code lines (~120ch in mono at 0.88rem ≈ 1080px,
+  // plus pre padding and container padding).
+  --measure: 72rem; // ~1152px
+}
+
+html {
+  font-size: 100%;
+}
+
+body {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height);
+  color: var(--ink);
+  background-color: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  margin: 1.6em 0 0.5em;
+}
+
+h1 { font-size: 1.85rem; }
+h2 { font-size: 1.45rem; }
+h3 { font-size: 1.2rem; }
+h4 { font-size: 1.05rem; }
+h5, h6 { font-size: 1rem; }
+
+p { margin: 0 0 1em; }
+
+small {
+  font-size: 0.85em;
+  color: var(--muted);
+}
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+}
+
+::selection {
+  background: var(--accent-bg);
+  color: var(--ink);
+}

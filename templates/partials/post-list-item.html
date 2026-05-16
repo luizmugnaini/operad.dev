@@ -1,0 +1,19 @@
+{# Single entry in a chronological list of posts. Imported as `item`. #}
+
+{% macro list_item(page) %}
+<li class="post-list-item">
+  {%- if page.date %}
+  <time datetime="{{ page.date | date(format='%Y-%m-%d') }}">{{ page.date | date(format='%Y-%m-%d') }}</time>
+  {%- else %}
+  <time>&mdash;</time>
+  {%- endif %}
+  <a class="post-list-item__title" href="{{ page.permalink | safe }}">{{ page.title }}</a>
+  {%- if page.taxonomies and page.taxonomies.tags %}
+  <span class="post-list-item__tags">
+    {%- for tag in page.taxonomies.tags | sort | unique(case_sensitive=false) -%}
+    <a class="tag" href="{{ get_taxonomy_url(kind='tags', name=tag) | safe }}">#{{ tag }}</a>{%- if not loop.last %} {% endif %}
+    {%- endfor %}
+  </span>
+  {%- endif %}
+</li>
+{% endmacro list_item %}

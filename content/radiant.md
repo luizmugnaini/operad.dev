@@ -1,13 +1,13 @@
 +++
-title = "radiant: a ray tracer"
+title = "Radiant, a Ray Tracer"
 date = 2023-02-23
 
 [taxonomies]
 tags = ["programming", "side-project", "graphics"]
 +++
 
-This is a simple CPU-based ray-tracer following [_Ray Tracing in One Weekend_](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
-by Peter Shirley
+This is a simple CPU-based ray tracer following [_Ray Tracing in One Weekend_](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
+by Peter Shirley. The [source code](https://git.sr.ht/~luizmugnaini/radiant) lives on sourcehut.
 
 {{ figure(src="/img/radiant/radiant-random.png",
           style="width: 70%;",

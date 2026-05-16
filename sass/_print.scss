@@ -1,0 +1,40 @@
+// _print.scss — strip chrome, force black-on-white, keep prose readable.
+
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .site-header,
+  .site-footer,
+  .post-pager,
+  .pagination,
+  .skip-link {
+    display: none !important;
+  }
+
+  main.content {
+    max-width: none;
+    padding: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+  }
+
+  pre,
+  code {
+    background: transparent !important;
+  }
+
+  .prose img,
+  .figure {
+    page-break-inside: avoid;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+}

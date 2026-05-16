@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="section-header">
+  <h1 class="section-header__title">tags</h1>
+</header>
+
+{% if terms | length > 0 %}
+<ul class="tag-list">
+  {% for term in terms %}
+  <li>
+    <a href="{{ term.permalink | safe }}">#{{ term.name }}</a>
+    <span class="tag-list__count">({{ term.pages | length }})</span>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>No tags yet.</p>
+{% endif %}
+{% endblock content %}
