@@ -23,6 +23,10 @@ via [_model categories_](https://ncatlab.org/nlab/show/model+category).
 
 Feel free to explore my blog and connect with me. I'm always eager to exchange some cool ideas.
 
+{% available_for_hire() %}
+I'm currently available for [contract work](/work) on a part-time basis.
+{% end %}
+
 ## Contact me
 
-The most reliable way to reach me is by email at <luizmugnaini@gmail.com>.
+The most reliable way to reach me is by email at {{ email() }}.

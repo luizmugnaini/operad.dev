@@ -29,6 +29,7 @@ author = "Luiz Mugnaini"
 wordmark = "operad.dev"
 email = "luizmugnaini@gmail.com"
 code_url = "https://git.sr.ht/~luizmugnaini"
+available_for_hire = true
 
 # Favicon — reused as the inline wordmark icon in the top bar.
 favicon = "/favicon_knot-192x192.png"
@@ -43,6 +44,6 @@ menu = [
     { name = "notes", url = "/" },
     { name = "about", url = "/about" },
     { name = "links", url = "/links" },
-    { name = "cv",    url = "/cv" },
+    { name = "work",  url = "/work" },
     { name = "code",  url_extra = "code_url", external = true },
 ]
