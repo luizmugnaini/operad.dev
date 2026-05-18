@@ -7,7 +7,7 @@ tags = ["programming", "side-project", "graphics"]
 +++
 
 This is a simple CPU-based ray tracer following [_Ray Tracing in One Weekend_](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
-by Peter Shirley. The [source code](https://git.sr.ht/~luizmugnaini/radiant) lives on sourcehut.
+by Peter Shirley. The {{ repo(name="radiant", text="source code") }} lives on sourcehut.
 
 {{ figure(src="/img/radiant/radiant-random.png",
           style="width: 70%;",

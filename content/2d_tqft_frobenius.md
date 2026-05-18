@@ -23,9 +23,6 @@ F a \widehat\otimes F b      @>>{\eta_a \widehat\otimes \eta_b}> G a \widehat\ot
 \end{CD}
 {% end %}
 
-
-<!-- more -->
-
 The paper is divided into 9 sections:
 
 1. **Monoidal categories**: This section serves as the foundation language of the

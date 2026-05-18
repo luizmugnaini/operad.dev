@@ -10,8 +10,6 @@ This post covers custom memory allocator strategies — arenas and stack allocat
 most common memory management problems in C and C++. The snippets shown here are simplified for
 clarity, drawn from a production codebase I work on that has to deal with real-time constraints.
 
-<!-- more -->
-
 I need to make some things clear from the start:
 - None of what I'll be talking about is new. Many large codebases adopt this exact memory-management
   design from the ground up.

@@ -21,9 +21,7 @@ common to emulation software.
     caption_style="font-weight: bold; font-style: italic;"
 )}}
 
-<!-- more -->
-
-The heart of [`chirp`](https://git.sr.ht/~luizmugnaini/chirp) is an interpreter of the CHIP-8
+The heart of {{ repo(name="chirp", text="`chirp`") }} is an interpreter of the CHIP-8
 programming language, with roots in the early days of game development. This project can serve as
 learning material for someone interested in dipping their toes in low-level waters.
 

@@ -7,12 +7,9 @@ updated = 2026-05-15
 tags = ["mathematics"]
 +++
 
-Since 2020 I have been documenting my studies in mathematics. This
-process ended up generating something that resembles a book. It is with the
-hope of illuminating the path for fellow nerds that I decided to share my
-collection of notes publicly.
-
-<!-- more -->
+Since 2020 I have been documenting my studies in mathematics. This process ended up generating
+something that resembles a book. It is with the hope of illuminating the path for fellow nerds that
+I decided to share my collection of notes publicly.
 
 _Deep Dive_ is the title I've chosen for my ever-evolving collection of personal notes. I claim
 absolutely _no_ originality in any of my writings, instead they can be thought of as a compilation of
@@ -33,5 +30,5 @@ probably my first introduction to actual modern mathematics. My interaction with
 on my journey in mathematics, and for that I'm profoundly grateful. For this exact reason I thought
 of making _Deep Dive_ available for anyone that might be interested in this kind of writing.
 
-The source is on [sourcehut](https://git.sr.ht/~luizmugnaini/deep-dive), and a [compiled
-PDF](/deep-dive.pdf) is also available.
+Both the {{ repo(name="deep-dive", text="source") }} and a [compiled PDF](/deep-dive.pdf) are
+available.
