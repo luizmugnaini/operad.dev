@@ -39,6 +39,8 @@ rendering, and physics simulations.
 - [Brian Conrad](https://virtualmath1.stanford.edu/~conrad/) --- number theory,
   arithmetic geometry, and algebraic geometry.
 - [Peter Haine](https://peterjhaine.github.io/) --- homotopy theory and algebraic geometry.
+- [Clark Barwick](https://webhomes.maths.ed.ac.uk/~cbarwick/) --- homotopy theory and category
+  theory.
 - [Arun Debray](https://adebray.github.io/) --- algebraic topology with an eye
   towards quantum field theory and condensed-matter physics.
 - [Ravi Vakil](https://virtualmath1.stanford.edu/~vakil/) --- algebraic geometry.
