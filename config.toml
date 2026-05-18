@@ -24,9 +24,11 @@ smart_punctuation = true
 theme = "tokyo-night"
 
 [extra]
+tagline = "Notes on mathematics & programming."
 author = "Luiz Mugnaini"
 wordmark = "operad.dev"
-tagline = "Notes on mathematics & programming."
+email = "luizmugnaini@gmail.com"
+code_url = "https://git.sr.ht/~luizmugnaini"
 
 # Favicon — reused as the inline wordmark icon in the top bar.
 favicon = "/favicon_knot-192x192.png"
@@ -35,10 +37,12 @@ favicon_mimetype = "image/png"
 # Top-level navigation.
 # - Internal paths begin with `/` and are resolved against base_url at render time.
 # - External links are flagged with `external = true` (open in a new tab).
+# - Items with `url_extra = "<extra_key>"` use config.extra[<extra_key>] as the href
+#   (preferred over a literal `url` when the URL is also referenced elsewhere).
 menu = [
     { name = "notes", url = "/" },
     { name = "about", url = "/about" },
     { name = "links", url = "/links" },
     { name = "cv",    url = "/cv" },
-    { name = "code",  url = "https://git.sr.ht/~luizmugnaini", external = true },
+    { name = "code",  url_extra = "code_url", external = true },
 ]

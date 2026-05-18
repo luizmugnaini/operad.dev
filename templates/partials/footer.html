@@ -5,7 +5,7 @@
       {%- if config.generate_feeds %}
       &middot; <a href="{{ get_url(path=config.feed_filenames[0]) | safe }}">feed</a>
       {%- endif %}
-      &middot; <a href="https://git.sr.ht/~luizmugnaini" rel="noopener">code</a>
+      &middot; <a href="{{ config.extra.code_url | safe }}" rel="noopener">code</a>
     </p>
   </div>
 </footer>
