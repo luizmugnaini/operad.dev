@@ -62,12 +62,20 @@ expected scope, and timeline is enough --- no boilerplate needed. Response withi
 
 {% cvitem(
     primary="Fullstack Python Contractor",
-    secondary="NDA startup",
+    secondary="Early-stage medical-education startup (confidential)",
     date="June 2023 – March 2024",
     location="São Paulo, Brazil") %}
-- Built a full web app for medical ultrasound courses hosted on Google Cloud.
-- Used FastAPI and HTMX with Jinja2 templates and Tailwind to build a fluid user experience.
-- Implemented user authentication using SQLite and a distributed asset versioning system using S3.
+- Designed and built a video-heavy learning platform for medical ultrasound training, taking the
+  system from zero to a complete MVP on Google Cloud (Python, FastAPI, HTMX, Jinja2, Tailwind,
+  SQLite, GCS)
+- Chose a server-rendered stack over a React SPA to ship a complete product
+  solo within startup runway, keeping navigation snappy without client-side
+  framework overhead.
+- Implemented session-based authentication and user persistence on SQLite,
+  sized for early-stage scale and structured for a clean future migration
+  to Postgres.
+- Designed a content-addressed asset versioning layer on GCS for atomic
+  publish and rollback of course materials (videos, PDFs).
 {% end %}
 
 ## Education
