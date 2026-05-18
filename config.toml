@@ -29,7 +29,7 @@ author = "Luiz Mugnaini"
 wordmark = "operad.dev"
 email = "luizmugnaini@gmail.com"
 code_url = "https://git.sr.ht/~luizmugnaini"
-available_for_hire = true
+available_for_hire = false
 
 # Favicon — reused as the inline wordmark icon in the top bar.
 favicon = "/favicon_knot-192x192.png"
