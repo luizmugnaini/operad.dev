@@ -16,7 +16,7 @@ for their work.
 After each entry, I add their main topics of research, but beware! Many of these people are very
 prolific individuals, whose works touch diverse areas that won't be explicitly mentioned here.
 
-### Geometry, Graphics & Physics
+### Geometry, Graphics & Physics Simulations
 
 The researchers listed here are strongly inclined towards mathematics, geometry processing,
 rendering, and physics simulations.
