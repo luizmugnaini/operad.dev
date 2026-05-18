@@ -3,7 +3,7 @@
 
   Compatible with the calls already in content/:
     {{ figure(src="...", alt="...", position="...", caption="...",
-              caption_style="...", caption_position="...", style="...") }}
+              caption_style="...", style="...") }}
 
   We deliberately ignore inline `style` and `caption_style` arguments — visual
   presentation belongs in the stylesheet, not in content.
@@ -12,7 +12,7 @@
 <figure class="figure{% if position %} figure--{{ position }}{% endif %}">
   <img src="{{ src | safe }}"{% if alt %} alt="{{ alt }}"{% else %} alt=""{% endif %} loading="lazy" decoding="async">
   {%- if caption %}
-  <figcaption class="figure__caption{% if caption_position %} figure__caption--{{ caption_position }}{% endif %}">{{ caption | markdown(inline=true) | safe }}</figcaption>
+  <figcaption class="figure__caption">{{ caption | markdown(inline=true) | safe }}</figcaption>
   {%- endif %}
 </figure>
 {%- endif -%}

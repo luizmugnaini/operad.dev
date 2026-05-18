@@ -122,18 +122,6 @@
   font-style: italic;
 }
 
-.figure--left {
-  text-align: left;
-
-  img { margin-left: 0; }
-}
-
-.figure--right {
-  text-align: right;
-
-  img { margin-right: 0; }
-}
-
 // --- Post header & meta ---
 .post-header {
   margin-bottom: 1.75rem;
@@ -335,10 +323,6 @@
   color: var(--ink);
 }
 
-.sidebar__tag {
-  // Inherits .tag base; just enough to ensure each item sits on its own line.
-}
-
 .all-posts__heading {
   font-size: 0.95rem;
   font-family: var(--font-mono);
@@ -355,8 +339,6 @@
   font-size: 0.9rem;
   color: var(--muted);
   margin: 0 0 1.5rem;
-
-  a { color: var(--accent); }
 }
 
 .cv-item {

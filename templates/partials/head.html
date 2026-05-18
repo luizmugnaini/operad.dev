@@ -9,7 +9,7 @@
 {%- endif -%}
 
 {# --- Resolve a description for OG/meta --- #}
-{%- set description = config.description | default(value="") -%}
+{%- set description = config.description -%}
 {%- if section and section.description %}{% set description = section.description %}{% endif -%}
 {%- if page and page.description %}{% set description = page.description %}{% endif -%}
 
@@ -29,14 +29,14 @@
   <title>{% if page_title %}{{ page_title }} — {% endif %}{{ config.title }}</title>
 
   {% if description %}<meta name="description" content="{{ description }}">{% endif %}
-  {% if config.extra.author %}<meta name="author" content="{{ config.extra.author }}">{% endif %}
+  <meta name="author" content="{{ config.extra.author }}">
 
   <link rel="canonical" href="{{ canonical_url | safe }}">
 
   {# --- OpenGraph (light, no Twitter card extras) --- #}
   <meta property="og:title" content="{% if page_title %}{{ page_title }}{% else %}{{ config.title }}{% endif %}">
   {% if description %}<meta property="og:description" content="{{ description }}">{% endif %}
-  <meta property="og:type" content="{% if page %}article{% else %}website{% endif %}">
+  <meta property="og:type" content="{% if page and page.date %}article{% else %}website{% endif %}">
   <meta property="og:url" content="{{ canonical_url | safe }}">
   <meta property="og:site_name" content="{{ config.title }}">
 
@@ -53,9 +53,7 @@
   {%- endif %}
 
   {# --- Favicon (SVG) --- #}
-  {%- if config.extra.favicon %}
-  <link rel="icon" type="{{ config.extra.favicon_mimetype | default(value='image/x-icon') | safe }}" href="{{ config.extra.favicon | safe }}">
-  {%- endif %}
+  <link rel="icon" type="{{ config.extra.favicon_mimetype | safe }}" href="{{ config.extra.favicon | safe }}">
 
   {# --- Conditional KaTeX (only on pages that opt in via extra.math = true). --- #}
   {%- if wants_math %}
@@ -66,8 +64,8 @@
     {%- set preamble = load_data(path="math-preamble.toml", format="toml", required=false) -%}
     {%- if preamble and preamble.macros %}{% set site_macros_json = preamble.macros | json_encode %}{% endif -%}
     {%- set page_macros_json = "{}" -%}
-    {%- if page and page.extra and page.extra.macros %}{% set page_macros_json = page.extra.macros | json_encode %}{% endif -%}
     {%- if section and section.extra and section.extra.macros %}{% set page_macros_json = section.extra.macros | json_encode %}{% endif -%}
+    {%- if page and page.extra and page.extra.macros %}{% set page_macros_json = page.extra.macros | json_encode %}{% endif -%}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>

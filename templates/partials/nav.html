@@ -1,12 +1,9 @@
 <header class="site-header">
   <div class="container site-header__inner">
     <a class="wordmark" href="{{ config.base_url | safe }}">
-      {%- if config.extra.favicon %}
       <img class="wordmark__icon" src="{{ config.extra.favicon | safe }}" alt="" width="20" height="20">
-      {%- endif %}
-      <span class="wordmark__text">{{ config.extra.wordmark | default(value=config.title) }}</span>
+      {{ config.extra.wordmark }}
     </a>
-    {%- if config.extra.menu %}
     <nav class="site-nav" aria-label="Primary">
       <ul>
       {%- for item in config.extra.menu %}
@@ -17,6 +14,5 @@
       {%- endfor %}
       </ul>
     </nav>
-    {%- endif %}
   </div>
 </header>

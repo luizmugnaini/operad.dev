@@ -1,6 +1,7 @@
 {# Macros for rendering post metadata. Imported as `meta` in templates. #}
 
 {% macro post_meta(page) %}
+{%- if page.date or page.updated or (page.taxonomies and page.taxonomies.tags) %}
 <div class="post-meta">
   {%- if page.date %}
   <time datetime="{{ page.date | date(format='%Y-%m-%d') }}">{{ page.date | date(format='%Y-%m-%d') }}</time>
@@ -16,4 +17,5 @@
   </span>
   {%- endif %}
 </div>
+{%- endif %}
 {% endmacro post_meta %}

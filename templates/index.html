@@ -10,17 +10,15 @@
 
 {% if is_first %}
 <section class="intro">
-  {% if config.extra.tagline %}<p class="intro__tagline">{{ config.extra.tagline }}</p>{% endif %}
-  {% if section.content %}<div class="prose intro__body">{{ section.content | safe }}</div>{% endif %}
+  <p class="intro__tagline">{{ config.extra.tagline }}</p>
+  {% if section.content %}<div class="prose">{{ section.content | safe }}</div>{% endif %}
 </section>
 {% endif %}
 
 {% if paginator %}
   {% set pages = paginator.pages %}
-{% elif section %}
-  {% set pages = section.pages %}
 {% else %}
-  {% set pages = [] %}
+  {% set pages = section.pages %}
 {% endif %}
 
 {% if pages | length > 0 %}

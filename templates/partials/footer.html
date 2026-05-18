@@ -1,7 +1,7 @@
 <footer class="site-footer">
   <div class="container site-footer__inner">
     <p>
-      &copy; {{ now() | date(format="%Y") }} {{ config.extra.author | default(value=config.title) }}.
+      &copy; {{ now() | date(format="%Y") }} {{ config.extra.author }}
       {%- if config.generate_feeds %}
       &middot; <a href="{{ get_url(path=config.feed_filenames[0]) | safe }}">feed</a>
       {%- endif %}
