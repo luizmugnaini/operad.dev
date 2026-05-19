@@ -2,6 +2,7 @@
 title = "Deep Dive"
 date = 2023-02-23
 updated = 2026-05-15
+description = "Deep Dive: extensive personal notes in mathematics"
 
 [taxonomies]
 tags = ["mathematics"]

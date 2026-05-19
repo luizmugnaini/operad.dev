@@ -1,6 +1,7 @@
 +++
 title = "Practical Memory Management"
 date = 2024-11-25
+description = "Memory management"
 
 [taxonomies]
 tags = ["programming"]
