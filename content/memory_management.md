@@ -222,7 +222,7 @@ ArenaCheckpoint arena_make_checkpoint(Arena *arena) {
     return ArenaCheckpoint{arena, arena->offset};
 }
 
-void arena_restore_state(ArenaCheckpoint checkpoint) {
+void arena_restore_checkpoint(ArenaCheckpoint checkpoint) {
     checkpoint.arena->offset = checkpoint.saved_offset;
 }
 ```
