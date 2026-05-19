@@ -67,7 +67,7 @@ expected scope, and timeline is enough --- no boilerplate needed. Response withi
     location="São Paulo, Brazil") %}
 - Designed and built a video-heavy learning platform for medical ultrasound training, taking the
   system from zero to a complete MVP on Google Cloud (Python, FastAPI, HTMX, Jinja2, Tailwind,
-  SQLite, GCS)
+  SQLite, GCS).
 - Chose a server-rendered stack over a React SPA to ship a complete product
   solo within startup runway, keeping navigation snappy without client-side
   framework overhead.
