@@ -180,7 +180,7 @@ where the parameter `alignment` is assumed to be a power of two.
 Having this auxiliary function at hand, making a new allocation can be very easily done:
 
 ```cpp
-uint8_t *arena_alloc_align(Arena *arena, size_t size_bytes, uint32_t alignment) {
+uint8_t *arena_alloc_align(Arena *arena, size_t size_bytes, size_t alignment) {
     if (arena == nullptr || arena->capacity == 0 || size_bytes == 0) {
         return nullptr;
     }
