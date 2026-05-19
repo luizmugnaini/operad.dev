@@ -4,7 +4,7 @@ date = 2023-03-03
 updated = 2025-01-06
 
 [taxonomies]
-tags = ["mathematics"]
+tags = ["mathematics", "mathematical-physics"]
 
 [extra]
 math = true
