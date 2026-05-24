@@ -35,15 +35,23 @@ available_for_hire = false
 favicon = "/favicon_knot-192x192.png"
 favicon_mimetype = "image/png"
 
+# OpenGraph / link-unfurl image. Path is relative to base_url; an absolute URL
+# is built at render time by `get_url(path=..., trailing_slash=false)`.
+# TODO: replace with a proper 1200×630 social card.
+og_image = "/favicon_letter-512x512.png"
+og_locale = "en_US"
+
+# Theme colours used by mobile browser chrome. Mirror the SCSS palette.
+theme_color_light = "#faf6ee"
+theme_color_dark  = "#14141a"
+
 # Top-level navigation.
 # - Internal paths begin with `/` and are resolved against base_url at render time.
 # - External links are flagged with `external = true` (open in a new tab).
-# - Items with `url_extra = "<extra_key>"` use config.extra[<extra_key>] as the href
-#   (preferred over a literal `url` when the URL is also referenced elsewhere).
 menu = [
     { name = "notes", url = "/" },
     { name = "about", url = "/about" },
     { name = "links", url = "/links" },
     { name = "work",  url = "/work" },
-    { name = "code",  url_extra = "code_url", external = true },
+    { name = "code",  url = "https://git.sr.ht/~luizmugnaini", external = true },
 ]

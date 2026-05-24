@@ -5,38 +5,20 @@
 
 {% block content %}
 
-{# Show the intro only on the first paginator page (or non-paginated). #}
-{% set is_first = not paginator or paginator.current_index == 1 %}
-
-{% if is_first %}
 <section class="intro">
   <p class="intro__tagline">{{ config.extra.tagline }}</p>
   {% if section.content %}<div class="prose">{{ section.content | safe }}</div>{% endif %}
 </section>
-{% endif %}
 
-{% if paginator %}
-  {% set pages = paginator.pages %}
-{% else %}
-  {% set pages = section.pages %}
-{% endif %}
-
-{% if pages | length > 0 %}
+{% if section.pages | length > 0 %}
 <div class="home-grid">
   <section class="all-posts">
-    {% if is_first %}<h2 class="all-posts__heading">all posts</h2>{% endif %}
+    <h2 class="all-posts__heading">all posts</h2>
     <ul class="post-list">
-      {% for page in pages %}{{ item::list_item(page=page) }}{% endfor %}
+      {% for page in section.pages %}{{ item::list_item(page=page) }}{% endfor %}
     </ul>
-    {% if paginator and (paginator.previous or paginator.next) %}
-    <nav class="pagination" aria-label="Pagination">
-      {% if paginator.previous %}<a class="pagination__prev" rel="prev" href="{{ paginator.previous | safe }}">&larr; newer</a>{% endif %}
-      {% if paginator.next %}<a class="pagination__next" rel="next" href="{{ paginator.next | safe }}">older &rarr;</a>{% endif %}
-    </nav>
-    {% endif %}
   </section>
 
-  {% if is_first %}
   {% set tags = get_taxonomy(kind="tags") %}
   {% if tags.items | length > 0 %}
   <aside class="sidebar" aria-label="Browse by tag">
@@ -45,7 +27,6 @@
     <a class="tag sidebar__tag" href="{{ term.permalink | safe }}">#{{ term.name }}</a>
     {%- endfor %}
   </aside>
-  {% endif %}
   {% endif %}
 </div>
 {% endif %}

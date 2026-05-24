@@ -140,14 +140,23 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem 1rem;
+  align-items: baseline;
 }
 
 .post-meta time {
   white-space: nowrap;
 }
 
+// "updated" gets its own emphasis: accent colour + slightly bolder so a
+// reader scanning a long-running post (Deep Dive, mac5856) immediately sees
+// the most recent edit date instead of treating it as fine-print metadata.
 .post-meta__updated {
-  font-style: italic;
+  color: var(--accent);
+  font-style: normal;
+
+  time {
+    font-weight: 700;
+  }
 }
 
 // --- Post pager (prev/next within a section) ---
@@ -206,6 +215,18 @@
   font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--muted);
+}
+
+// On narrow viewports the date column eats too much room; collapse to one
+// column and let the date sit above the title.
+@media (max-width: 480px) {
+  .post-list-item {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+  .post-list-item__tags {
+    grid-column: 1;
+  }
 }
 
 .post-list-item__title {

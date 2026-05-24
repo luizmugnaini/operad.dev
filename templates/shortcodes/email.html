@@ -1,2 +1,10 @@
+{#
+  email shortcode — produces a mailto link with the address lightly obfuscated
+  in the visible text. Each "@" is rendered as &#x40; and each "." as &#46;
+  via HTML numeric character references; this defeats naive regex scrapers
+  while remaining transparent to humans, screen readers, and the mailto:
+  href itself (kept literal for one-click "compose new mail" support).
+#}
 {%- set addr = config.extra.email -%}
-<a href="mailto:{{ addr }}">{{ addr }}</a>
+{%- set display = addr | replace(from="@", to="&#x40;") | replace(from=".", to="&#46;") -%}
+<a href="mailto:{{ addr }}">{{ display | safe }}</a>

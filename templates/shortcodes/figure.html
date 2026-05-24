@@ -1,16 +1,22 @@
-{#
-  figure shortcode.
-
-  Compatible with the calls already in content/:
-    {{ figure(src="...", alt="...", position="...", caption="...",
-              caption_style="...", style="...") }}
-
-  We deliberately ignore inline `style` and `caption_style` arguments — visual
-  presentation belongs in the stylesheet, not in content.
-#}
+{# figure shortcode. Local images get intrinsic width/height via
+   get_image_metadata; remote images skip the lookup. #}
 {%- if src -%}
+{%- set is_local = src is starting_with("/") -%}
+{%- set width = 0 -%}
+{%- set height = 0 -%}
+{%- if is_local -%}
+  {%- set lookup_path = src | trim_start_matches(pat="/") -%}
+  {%- set meta = get_image_metadata(path=lookup_path, allow_missing=true) -%}
+  {%- if meta -%}
+    {%- set width = meta.width -%}
+    {%- set height = meta.height -%}
+  {%- endif -%}
+{%- endif -%}
 <figure class="figure{% if position %} figure--{{ position }}{% endif %}">
-  <img src="{{ src | safe }}"{% if alt %} alt="{{ alt }}"{% else %} alt=""{% endif %} loading="lazy" decoding="async">
+  <img src="{{ src | safe }}"
+       {% if alt %}alt="{{ alt }}"{% else %}alt=""{% endif %}
+       {%- if width and height %} width="{{ width }}" height="{{ height }}"{% endif %}
+       loading="lazy" decoding="async">
   {%- if caption %}
   <figcaption class="figure__caption">{{ caption | markdown(inline=true) | safe }}</figcaption>
   {%- endif %}

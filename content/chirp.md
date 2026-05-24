@@ -2,7 +2,7 @@
 title = "Exploring Emulation With Chirp, a CHIP-8 Interpreter"
 date = 2023-02-23
 updated = 2025-06-01
-description: "A simple CHIP-8 interpreter"
+description = "A simple CHIP-8 interpreter"
 
 [taxonomies]
 tags = ["programming", "side-project", "emulation"]

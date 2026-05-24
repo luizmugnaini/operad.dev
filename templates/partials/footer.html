@@ -2,9 +2,7 @@
   <div class="container site-footer__inner">
     <p>
       &copy; {{ now() | date(format="%Y") }} {{ config.extra.author }}
-      {%- if config.generate_feeds %}
       &middot; <a href="{{ get_url(path=config.feed_filenames[0]) | safe }}">feed</a>
-      {%- endif %}
       &middot; <a href="{{ config.extra.code_url | safe }}" rel="noopener">code</a>
     </p>
   </div>

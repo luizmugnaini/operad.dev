@@ -76,3 +76,15 @@ Disallow: /
 # Webz.io / omgili
 User-agent: omgilibot
 Disallow: /
+
+# Huawei (Petal Search) — also feeds AI training pipelines
+User-agent: PetalBot
+Disallow: /
+
+# Majestic — historically scraped at scale, sold for AI dataset construction
+User-agent: MJ12bot
+Disallow: /
+
+# DuckDuckGo's AI assistant crawler (separate from DuckDuckBot for search)
+User-agent: DuckAssistBot
+Disallow: /

@@ -2,6 +2,7 @@
 title = "2D Topological Quantum Field Theories and Commutative Frobenius Algebras"
 date = 2023-03-03
 updated = 2025-01-06
+description = "2D TQFT equivalence with commutative Frobenius algebras"
 
 [taxonomies]
 tags = ["mathematics", "mathematical-physics"]

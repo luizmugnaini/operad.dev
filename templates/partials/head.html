@@ -1,30 +1,33 @@
-{# --- Build a sensible page title --- #}
+{# Page title — uses page.title for posts/pages, term.name for tag pages,
+   falls back to just config.title for the front page and the tag list. #}
 {%- set page_title = "" -%}
 {%- if page and page.title -%}
   {%- set page_title = page.title -%}
-{%- elif section and section.title -%}
-  {%- set page_title = section.title -%}
 {%- elif term and term.name -%}
   {%- set page_title = "Tag: " ~ term.name -%}
 {%- endif -%}
 
-{# --- Resolve a description for OG/meta --- #}
+{# Per-page description, falling back to the site-wide config.description. #}
 {%- set description = config.description -%}
-{%- if section and section.description %}{% set description = section.description %}{% endif -%}
 {%- if page and page.description %}{% set description = page.description %}{% endif -%}
 
-{# --- Canonical URL --- #}
+{# Canonical URL, with current_url defaulting to base_url for the rare
+   template that runs without one (e.g. 404). #}
 {%- set canonical_url = current_url | default(value=config.base_url) -%}
 
-{# --- Does this page opt into KaTeX runtime? --- #}
-{%- set wants_math = false -%}
-{%- if page and page.extra and page.extra.math %}{% set wants_math = true %}{% endif -%}
-{%- if section and section.extra and section.extra.math %}{% set wants_math = true %}{% endif -%}
+{# Absolute OG image URL. config.extra.og_image is always set. #}
+{%- set og_image_url = get_url(path=config.extra.og_image, trailing_slash=false) -%}
+
+{# Pages opt into KaTeX runtime by setting extra.math = true in front-matter. #}
+{%- set wants_math = page and page.extra and page.extra.math -%}
 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+
+  <meta name="theme-color" content="{{ config.extra.theme_color_light }}" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="{{ config.extra.theme_color_dark }}" media="(prefers-color-scheme: dark)">
 
   <title>{% if page_title %}{{ page_title }} — {% endif %}{{ config.title }}</title>
 
@@ -33,42 +36,29 @@
 
   <link rel="canonical" href="{{ canonical_url | safe }}">
 
-  {# --- OpenGraph (light, no Twitter card extras) --- #}
+  {# OpenGraph #}
   <meta property="og:title" content="{% if page_title %}{{ page_title }}{% else %}{{ config.title }}{% endif %}">
   {% if description %}<meta property="og:description" content="{{ description }}">{% endif %}
   <meta property="og:type" content="{% if page and page.date %}article{% else %}website{% endif %}">
   <meta property="og:url" content="{{ canonical_url | safe }}">
   <meta property="og:site_name" content="{{ config.title }}">
+  <meta property="og:locale" content="{{ config.extra.og_locale }}">
+  <meta property="og:image" content="{{ og_image_url | safe }}">
 
-  {# --- Stylesheet --- #}
   <link rel="stylesheet" href="{{ get_url(path='main.css', trailing_slash=false, cachebust=true) | safe }}">
 
-  {# --- Feed discovery --- #}
-  {%- if config.generate_feeds %}
-    {%- for ff in config.feed_filenames %}
-      {%- set ftype = "atom+xml" -%}
-      {%- if "rss" in ff %}{% set ftype = "rss+xml" %}{% endif -%}
-  <link rel="alternate" type="application/{{ ftype }}" href="{{ get_url(path=ff) | safe }}" title="{{ config.title }}">
-    {%- endfor %}
-  {%- endif %}
+  <link rel="alternate" type="application/atom+xml" href="{{ get_url(path=config.feed_filenames[0]) | safe }}" title="{{ config.title }}">
 
-  {# --- Favicon (SVG) --- #}
   <link rel="icon" type="{{ config.extra.favicon_mimetype | safe }}" href="{{ config.extra.favicon | safe }}">
 
-  {# --- Conditional KaTeX (only on pages that opt in via extra.math = true). --- #}
+  {# KaTeX is self-hosted under static/vendor/. Site-wide macros come from
+     math-preamble.toml; per-page macro overrides aren't used yet. #}
   {%- if wants_math %}
-    {# Build JSON strings for the site-wide and per-page macro tables. Both
-       default to "{}" so Object.assign always has valid arguments. Per-page
-       macros override site-wide on key collision. #}
-    {%- set site_macros_json = "{}" -%}
-    {%- set preamble = load_data(path="math-preamble.toml", format="toml", required=false) -%}
-    {%- if preamble and preamble.macros %}{% set site_macros_json = preamble.macros | json_encode %}{% endif -%}
-    {%- set page_macros_json = "{}" -%}
-    {%- if section and section.extra and section.extra.macros %}{% set page_macros_json = section.extra.macros | json_encode %}{% endif -%}
-    {%- if page and page.extra and page.extra.macros %}{% set page_macros_json = page.extra.macros | json_encode %}{% endif -%}
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    {%- set preamble = load_data(path="math-preamble.toml", format="toml") -%}
+    {%- set macros_json = preamble.macros | json_encode -%}
+  <link rel="stylesheet" href="{{ get_url(path='vendor/katex/0.16.9/katex.min.css', trailing_slash=false) | safe }}">
+  <script defer src="{{ get_url(path='vendor/katex/0.16.9/katex.min.js', trailing_slash=false) | safe }}"></script>
+  <script defer src="{{ get_url(path='vendor/katex/0.16.9/contrib/auto-render.min.js', trailing_slash=false) | safe }}"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       renderMathInElement(document.body, {
@@ -78,10 +68,30 @@
           { left: "\\(", right: "\\)", display: false },
           { left: "$",  right: "$",  display: false }
         ],
-        macros: Object.assign({}, {{ site_macros_json | safe }}, {{ page_macros_json | safe }}),
+        macros: {{ macros_json | safe }},
         throwOnError: false
       });
     });
+  </script>
+  {%- endif %}
+
+  {# JSON-LD structured data for posts. #}
+  {%- if page and page.date %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": {{ page.title | json_encode | safe }},
+    {%- if description %}
+    "description": {{ description | json_encode | safe }},
+    {%- endif %}
+    "datePublished": "{{ page.date | date(format='%Y-%m-%d') }}",
+    "dateModified": "{{ page.updated | default(value=page.date) | date(format='%Y-%m-%d') }}",
+    "author": { "@type": "Person", "name": {{ config.extra.author | json_encode | safe }} },
+    "publisher": { "@type": "Person", "name": {{ config.extra.author | json_encode | safe }} },
+    "mainEntityOfPage": { "@type": "WebPage", "@id": {{ canonical_url | json_encode | safe }} },
+    "image": {{ og_image_url | json_encode | safe }}
+  }
   </script>
   {%- endif %}
 
