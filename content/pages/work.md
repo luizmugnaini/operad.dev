@@ -65,7 +65,7 @@ expected scope, and timeline is enough --- no boilerplate needed. Response withi
     secondary="Early-stage medical-education startup (confidential)",
     date="June 2023 – March 2024",
     location="São Paulo, Brazil") %}
-- Designed and built a video-heavy learning platform for medical ultrasound training, taking the
+- Designed and built a learning platform for medical ultrasound training, taking the
   system from zero to a complete MVP on Google Cloud (Python, FastAPI, HTMX, Jinja2, Tailwind,
   SQLite, GCS).
 - Chose a server-rendered stack over a React SPA to ship a complete product
