@@ -1,3 +1,4 @@
+
 +++
 title = "Links"
 description = "Tiny list of inspiring and useful references."
@@ -78,8 +79,6 @@ rendering, and physics simulations.
 - [Molecular Matters blog](https://blog.molecular-matters.com/).
 - [Wicked Engine's devblog](https://wickedengine.net/category/devblog/).
 - [Fabian 'Ryg' Giesen's blog](https://fgiesen.wordpress.com).
-- [Andreas Fredriksson's blog](https://deplinenoise.wordpress.com), unfortunately seems to be stale,
-  but is packed with knowledge.
 - [Red Blob Games](https://www.redblobgames.com/), by Amid Patel --- procedural terrain generation
   and a variety of interesting topics.
 - [Arseny Kapoulkine's blog](https://zeux.io) --- computer graphics and related topics.
@@ -87,6 +86,10 @@ rendering, and physics simulations.
 - [Ignacio Castaño's blog](https://www.ludicon.com/castano/blog/) --- texture compression, graphics
   and game development.
 - [Sebastian Aaltonen's blog](https://www.sebastianaaltonen.com) --- computer graphics.
+- [Andreas Fredriksson's blog](https://deplinenoise.wordpress.com/) --- stale blog as far as I know,
+  but there are interesting posts there.
+- [n-Category Café](https://golem.ph.utexas.edu/category/) --- group blog on mathematics, physics
+  and philosophy.
 
 ## Selected Works
 
