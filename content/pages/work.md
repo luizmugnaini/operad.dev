@@ -98,7 +98,7 @@ re-topology workflows.
     location="São Paulo, Brazil") %}
 Interdisciplinary scientific research in Computer Science and Mathematics, originating in
 combinatorial models of [Homotopy Theory](https://ncatlab.org/nlab/show/homotopy+theory), my studies
-evolved into the discretization of continuous surfaces and its applications to Computer
+evolved into the discretisation of continuous surfaces and its applications to Computer
 Graphics. This led me into researching differential methods for the geometry processing of polygonal
 meshes. I've documented all of my studies in a [comprehensive compendium of Mathematics and Computer Science](/deep-dive).
 
