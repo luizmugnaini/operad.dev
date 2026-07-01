@@ -60,7 +60,7 @@ Resolving an include path to an actual file on disk is unfortunately difficult d
 compiler resolves includes. Since you can pass include directories to the compiler driver, for an
 accurate search we would either need to integrate with the build system or make the user explicitly
 give us the include directories and order of resolution --- which is not a good UX. Not to mention
-includes with file paths defined via macros... looking at you Freetype!
+includes with file paths defined via macros... looking at you FreeType!
 
 Since this is a proof of concept, we simply do a best-effort resolution with full and relative path
 analysis, which is not enough for solving the problem --- but can be a good start.
