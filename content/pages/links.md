@@ -19,9 +19,6 @@ prolific individuals, whose works touch diverse areas that won't be explicitly m
 
 ### Geometry, Graphics & Physics Simulations
 
-The researchers listed here are strongly inclined towards mathematics, geometry processing,
-rendering, and physics simulations.
-
 - [Keenan Crane](https://www.cs.cmu.edu/~kmcrane/) --- computer graphics and discrete differential
   geometry.
 - [Mathieu Desbrun](https://pages.saclay.inria.fr/mathieu.desbrun/) --- computer
