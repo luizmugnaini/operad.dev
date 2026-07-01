@@ -27,6 +27,9 @@ Feel free to explore my blog and connect with me. I'm always eager to exchange s
 I'm currently available for [contract work](/work) on a part-time basis.
 {% end %}
 
+Note: I use em-dashes. I setup my blog so that triple dashes are converted to an em-dash. I'll not
+allow a human construct to be appropriated by artificial stupidity.
+
 ## Contact me
 
 The most reliable way to reach me is by email at {{ email() }}.
