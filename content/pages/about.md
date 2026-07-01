@@ -7,8 +7,8 @@ path = "about"
 Hello there! I'm Luiz Mugnaini, a Brazilian programmer and a Master's student in Computer Science at
 the University of São Paulo (USP). Oh and I currently work at Amazon.
 
-My interests are very diverse, and currently I focus mostly on pure/applied mathematics, computer
-graphics and game development.
+My interests are very diverse, and currently I'm focused mostly on applied mathematics within the
+fields of geometry processing, light transport, and physics simulations.
 
 I love to implement stuff from scratch, mostly in C and C++ --- which are my daily drivers. I also
 sometimes do some scripting in Python and Lua.
