@@ -29,7 +29,7 @@ I prefer scoped engagements with concrete deliverables --- a few days of focused
 multi-month development. I do not take work on staff augmentation, AI, front-end web-development, or
 SaaS-CRUD.
 
-To start a conversation, email <{{ config.extra.email }}>. A short note describing the problem,
+To start a conversation, email {{ email() }}. A short note describing the problem,
 expected scope, and timeline is enough --- no boilerplate needed. Response within a day or two.
 {% end %}
 
