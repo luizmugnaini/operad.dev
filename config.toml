@@ -51,7 +51,8 @@ theme_color_dark  = "#14141a"
 menu = [
     { name = "notes", url = "/" },
     { name = "about", url = "/about" },
-    { name = "links", url = "/links" },
     { name = "work",  url = "/work" },
     { name = "code",  url = "https://git.sr.ht/~luizmugnaini", external = true },
+    # { name = "art",   url = "/art" },
+    { name = "links", url = "/links" },
 ]

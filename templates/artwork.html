@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{# A single artwork detail page (child of the `art` section). Shows the title,
+   creation date, materials, the descriptive prose, and every associated image.
+   Full-size images are capped and re-encoded at build time via resize_image. #}
+
+{% block content %}
+<article class="artwork">
+  <header class="post-header">
+    <p class="artwork__back"><a href="{{ get_url(path='/art', trailing_slash=true) | safe }}">Back to gallery</a></p>
+    <h1 class="post-title">{{ page.title }}</h1>
+    <div class="post-meta">
+      {%- if page.date %}
+      <time datetime="{{ page.date | date(format='%Y-%m-%d') }}">{{ page.date | date(format='%Y-%m-%d') }}</time>
+      {%- endif %}
+      {%- if page.extra.materials %}
+      <span class="artwork__materials">{{ page.extra.materials }}</span>
+      {%- endif %}
+    </div>
+  </header>
+
+  {% if page.content %}<div class="prose">{{ page.content | safe }}</div>{% endif %}
+
+  {%- if page.extra.images %}
+  <div class="artwork__images">
+    {%- for img in page.extra.images %}
+    {%- set full = resize_image(path=page.colocated_path ~ img.src, width=1400, op="fit_width", format="auto") -%}
+    <figure class="figure">
+      <img src="{{ full.url | safe }}"
+           width="{{ full.width }}" height="{{ full.height }}"
+           alt="{% if img.alt %}{{ img.alt }}{% else %}{{ page.title }}{% endif %}"
+           loading="lazy" decoding="async">
+      {%- if img.caption %}
+      <figcaption class="figure__caption">{{ img.caption | markdown(inline=true) | safe }}</figcaption>
+      {%- endif %}
+    </figure>
+    {%- endfor %}
+  </div>
+  {%- endif %}
+</article>
+{% endblock content %}

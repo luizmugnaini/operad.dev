@@ -1,0 +1,99 @@
+// _gallery.scss — the art section grid and the artwork detail page.
+//
+// The grid is a plain responsive CSS grid (no JS, no masonry lib). Thumbnails
+// keep their natural aspect ratio, so tile heights vary and bottoms are
+// ragged — deliberate, and it avoids cropping the work. Row-major flow keeps
+// the date ordering readable left-to-right, top-to-bottom.
+
+.gallery {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem 1.25rem;
+  align-items: start;
+}
+
+.gallery__link {
+  display: block;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.gallery__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--tint);
+  transition: opacity 0.15s ease;
+}
+
+.gallery__link:hover .gallery__img,
+.gallery__link:focus .gallery__img {
+  opacity: 0.85;
+}
+
+.gallery__caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.gallery__title {
+  color: var(--ink);
+}
+
+.gallery__link:hover .gallery__title,
+.gallery__link:focus .gallery__title {
+  color: var(--accent);
+}
+
+.gallery__date {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+// --- Artwork detail page ---
+.artwork__back {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  margin: 0 0 0.5rem;
+}
+
+.artwork__back a {
+  color: var(--accent);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.artwork__materials {
+  color: var(--muted);
+}
+
+.artwork__images {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.artwork__images .figure {
+  margin: 0;
+}
+
+.artwork__images img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+}

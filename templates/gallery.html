@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{# Art gallery — the `content/art` section. Renders each child page (a page
+   bundle = one artwork) as a grid tile whose thumbnail is generated at build
+   time with resize_image. Tiles keep their natural aspect ratio (op="fit_width",
+   no crop) and flow row-major so the date ordering reads left-to-right. #}
+
+{% block content %}
+<header class="section-header">
+  <h1 class="section-header__title">{{ section.title }}</h1>
+  {% if section.content %}<div class="prose section-header__lede">{{ section.content | safe }}</div>{% endif %}
+</header>
+
+<ul class="gallery">
+  {%- for page in section.pages %}
+  {%- set thumb_name = page.extra.thumb | default(value="thumb.png") -%}
+  {%- set thumb = resize_image(path=page.colocated_path ~ thumb_name, width=700, op="fit_width", format="auto") -%}
+  <li class="gallery__item">
+    <a class="gallery__link" href="{{ page.permalink | safe }}">
+      <img class="gallery__img"
+           src="{{ thumb.url | safe }}"
+           width="{{ thumb.width }}" height="{{ thumb.height }}"
+           alt="{{ page.title }}"
+           loading="lazy" decoding="async">
+      <span class="gallery__caption">
+        <span class="gallery__title">{{ page.title }}</span>
+        <time class="gallery__date" datetime="{{ page.date | date(format='%Y-%m-%d') }}">{{ page.date | date(format='%Y') }}</time>
+      </span>
+    </a>
+  </li>
+  {%- endfor %}
+</ul>
+{% endblock content %}
