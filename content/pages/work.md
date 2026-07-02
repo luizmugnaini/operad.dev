@@ -38,7 +38,7 @@ expected scope, and timeline is enough --- no boilerplate needed. Response withi
 {% cvitem(
     primary="Founder & Lead Developer",
     secondary="Presheaf Studio",
-    date="April 2024 – Present",
+    date="August 2026 – Present",
     location="São Paulo, Brazil") %}
 - Designing a native cross-platform application for professional digital sculpting based on my
   research on polygonal mesh retopology.
@@ -48,7 +48,7 @@ expected scope, and timeline is enough --- no boilerplate needed. Response withi
 {% cvitem(
     primary="Software Development Engineer (SDE)",
     secondary="Amazon",
-    date="February 2025 – Present",
+    date="February 2025 – July 2026",
     location="São Paulo, Brazil") %}
 - Spearheaded an invoice processing system for the Indian government handling 1 million updates per
   day.
