@@ -1,11 +1,25 @@
-{# figure shortcode. Local images get intrinsic width/height via
-   get_image_metadata; remote images skip the lookup. #}
+{# figure shortcode. Three kinds of `src` are supported:
+     - remote URLs (http/https): used as-is, no metadata lookup.
+     - absolute paths ("/img/..."): looked up under the project root.
+     - colocated assets (a bare filename): resolved relative to the current
+       page bundle, so `content/<post>/index.md` can reference `foo.png`.
+   Local images get intrinsic width/height via get_image_metadata. #}
 {%- if src -%}
-{%- set is_local = src is starting_with("/") -%}
+{%- set is_remote = src is starting_with("http") -%}
+{%- set is_absolute = src is starting_with("/") -%}
 {%- set width = 0 -%}
 {%- set height = 0 -%}
-{%- if is_local -%}
-  {%- set lookup_path = src | trim_start_matches(pat="/") -%}
+{%- set out_src = src -%}
+{%- if not is_remote -%}
+  {%- if is_absolute -%}
+    {%- set lookup_path = src | trim_start_matches(pat="/") -%}
+  {%- else -%}
+    {# colocated asset: content/<post>/index.md -> content/<post>/<src> #}
+    {%- set bundle_dir = page.relative_path | trim_end_matches(pat="index.md") -%}
+    {%- set lookup_path = bundle_dir ~ src -%}
+    {# emit an absolute URL so the image also resolves in feeds #}
+    {%- set out_src = page.permalink ~ src -%}
+  {%- endif -%}
   {%- set meta = get_image_metadata(path=lookup_path, allow_missing=true) -%}
   {%- if meta -%}
     {%- set width = meta.width -%}
@@ -13,7 +27,7 @@
   {%- endif -%}
 {%- endif -%}
 <figure class="figure{% if position %} figure--{{ position }}{% endif %}">
-  <img src="{{ src | safe }}"
+  <img src="{{ out_src | safe }}"
        {% if alt %}alt="{{ alt }}"{% else %}alt=""{% endif %}
        {%- if width and height %} width="{{ width }}" height="{{ height }}"{% endif %}
        loading="lazy" decoding="async">

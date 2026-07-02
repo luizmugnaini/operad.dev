@@ -49,4 +49,4 @@ The paper is divided into 9 sections:
 9. **Equivalence theorems**: Reaching the climax of the paper, we delve into the
    theorems that motivated its creation in the first place.
 
-The full paper is [available as a PDF](/2d-tqft-frobenius.pdf).
+The full paper is [available as a PDF](2d-tqft-frobenius.pdf).

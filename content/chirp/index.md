@@ -15,7 +15,7 @@ mid-1970s.  Although not a hardware emulation project, it makes you dig a bit in
 common to emulation software.
 
 {{ figure(
-    src="/img/chirp/maze.png",
+    src="maze.png",
     alt="Screenshot of the MAZE game running on chirp",
     position="center",
     caption="MAZE game running on `chirp`",
@@ -28,7 +28,7 @@ material for someone interested in dipping their toes in low-level waters. The p
 Rust.
 
 {{ figure(
-    src="/img/chirp/invaders.png",
+    src="invaders.png",
     alt="Screenshot of the Space Invaders game running on chirp",
     position="center",
     caption="Space Invaders game running on `chirp`",

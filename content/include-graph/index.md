@@ -34,7 +34,7 @@ pieces connected by a database:
   diagram.
 
 {{ figure(
-    src="/img/include-graph/overview.png",
+    src="overview.png",
     alt="The visualiser showing the include graph of a codebase",
     position="center",
     caption="The visualiser with the full Blender codebase loaded",
@@ -81,7 +81,7 @@ The features that matter for analysis are:
 - **A global stats panel.** Rankings for the whole codebase by metrics such as: most
   included, most includes, highest rebuild impact, heaviest to compile, and caught cycles.
   {{ figure(
-      src="/img/include-graph/graph_stats.png",
+      src="graph-stats.png",
       alt="A window showing the global statistics of the include graph.",
       position="center",
       caption="The globally computed statistics over the entire Blender codebase",
@@ -91,7 +91,7 @@ The features that matter for analysis are:
   in both directions --- over the files it includes (its descendants) and the files that include it
   (its ancestors) --- fading the colour with distance so you can see how far the ripple reaches.
   {{ figure(
-      src="/img/include-graph/selection.png",
+      src="selection.png",
       alt="A selected node with its dependency ancestors and descendants highlighted",
       position="center",
       caption="Selecting a node highlights all of its related files. In yellow we have files that
@@ -116,7 +116,7 @@ The features that matter for analysis are:
   files.
 
 {{ figure(
-    src="/img/include-graph/selection_info.png",
+    src="selection-info.png",
     alt="A selected node information window with searchable results",
     position="center",
     caption="You can inspect the information about a node in a searchable view. The figure shows the
@@ -214,7 +214,7 @@ right at the headers where techniques like the pimpl idiom, forward declarations
 large header into smaller ones would pay off the most.
 
 {{ figure(
-    src="/img/include-graph/blender_stats.png",
+    src="blender-stats.png",
     alt="The global statistics panel ranking files by rebuild impact and compile weight",
     position="center",
     caption="Global statistics of the internal source code of the Blender codebase.",

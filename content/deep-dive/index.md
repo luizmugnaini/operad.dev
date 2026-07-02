@@ -31,5 +31,5 @@ probably my first introduction to actual modern mathematics. My interaction with
 on my journey in mathematics, and for that I'm profoundly grateful. For this exact reason I thought
 of making _Deep Dive_ available for anyone that might be interested in this kind of writing.
 
-Both the {{ repo(name="deep-dive", text="source") }} and a [compiled PDF](/deep-dive.pdf) are
+Both the {{ repo(name="deep-dive", text="source") }} and a [compiled PDF](deep-dive.pdf) are
 available.
