@@ -37,7 +37,7 @@ expected scope, and timeline is enough --- no boilerplate needed. Response withi
 
 {% cvitem(
     primary="Founder & Lead Developer",
-    secondary="Presheaf Studio",
+    secondary="Fresta",
     date="August 2026 – Present",
     location="São Paulo, Brazil") %}
 - Designing a native cross-platform application for professional digital sculpting based on my
