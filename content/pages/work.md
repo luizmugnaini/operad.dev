@@ -37,7 +37,7 @@ expected scope, and timeline is enough --- no boilerplate needed. Response withi
 
 {% cvitem(
     primary="Founder & Lead Developer",
-    secondary="Fresta",
+    secondary="[Fresta](https://frestacg.com)",
     date="August 2026 – Present",
     location="São Paulo, Brazil") %}
 - Designing a native cross-platform application for professional digital sculpting based on my
@@ -62,7 +62,7 @@ expected scope, and timeline is enough --- no boilerplate needed. Response withi
 
 {% cvitem(
     primary="Fullstack Python Contractor",
-    secondary="Early-stage medical-education startup (confidential)",
+    secondary="Early-stage medical-education startup",
     date="June 2023 – March 2024",
     location="São Paulo, Brazil") %}
 - Designed and built a learning platform for medical ultrasound training, taking the
@@ -86,13 +86,13 @@ expected scope, and timeline is enough --- no boilerplate needed. Response withi
     date="Aug. 2024 – Present",
     location="São Paulo, Brazil") %}
 I research novel techniques for geometry processing of 3D meshes leveraging ideas from the growing
-field of Discrete Differential Geometry. As part of my work, I'm developing algorithms for better
-re-topology workflows.
+field of [Discrete Differential Geometry](https://www.ams.org/publications/journals/notices/201710/rnoti-p1153.pdf). As part of my
+work, I'm developing algorithms for improving real-time remeshing workflows.
 {% end %}
 
 {% cvitem(
     primary="University of São Paulo",
-    secondary="BSc in Molecular Sciences",
+    secondary="BSc in [Molecular Sciences](http://cecm.usp.br/)",
     gpa="9.2/10",
     date="Jul. 2020 – Aug. 2024",
     location="São Paulo, Brazil") %}
