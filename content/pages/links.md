@@ -44,8 +44,6 @@ prolific individuals, whose works touch diverse areas that won't be explicitly m
 - [Ravi Vakil](https://virtualmath1.stanford.edu/~vakil/) --- algebraic geometry.
 - [Tim Hosgood](https://thosgood.net/) --- algebraic geometry, homotopy theory, and translations of
   great texts.
-- [Timothy Gowers](https://gowers.wordpress.com/) --- combinatorics.
-- [Terrence Tao](https://terrytao.wordpress.com/) --- analysis and number theory.
 - [Peter May](https://math.uchicago.edu/~may/) --- algebraic topology and category theory.
 - [John Baez](https://math.ucr.edu/home/baez/) --- mathematical physics, quantum gravity, and
   applied category theory.
