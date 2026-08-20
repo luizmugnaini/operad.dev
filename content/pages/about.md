@@ -5,7 +5,7 @@ path = "about"
 +++
 
 Hello there! I'm Luiz Mugnaini, a Brazilian programmer and a Master's student in Computer Science at
-the University of São Paulo (USP). Oh and I currently work at Amazon.
+the University of São Paulo (USP).
 
 My interests are very diverse, and currently I'm focused mostly on applied mathematics within the
 fields of geometry processing, light transport, and physics simulations.
