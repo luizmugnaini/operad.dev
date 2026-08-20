@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <meta name="theme-color" content="#faf6ee" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14141a" media="(prefers-color-scheme: dark)">
+
+  <title>2D Topological Quantum Field Theories and Commutative Frobenius Algebras — operad.dev</title>
+
+  <meta name="description" content="2D TQFT equivalence with commutative Frobenius algebras">
+  <meta name="author" content="Luiz Mugnaini">
+
+  <link rel="canonical" href="https://operad.dev/2d-tqft-frobenius/">
+
+  
+  <meta property="og:title" content="2D Topological Quantum Field Theories and Commutative Frobenius Algebras">
+  <meta property="og:description" content="2D TQFT equivalence with commutative Frobenius algebras">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://operad.dev/2d-tqft-frobenius/">
+  <meta property="og:site_name" content="operad.dev">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:image" content="https://operad.dev/favicon_letter-512x512.png">
+
+  <link rel="stylesheet" href="https://operad.dev/main.css?h=bec186606d61b1230339">
+
+  <link rel="alternate" type="application/atom+xml" href="https://operad.dev/atom.xml" title="operad.dev">
+
+  <link rel="icon" type="image/png" href="/favicon_knot-192x192.png">
+
+  <link rel="stylesheet" href="https://operad.dev/vendor/katex/0.16.9/katex.min.css">
+  <script defer src="https://operad.dev/vendor/katex/0.16.9/katex.min.js"></script>
+  <script defer src="https://operad.dev/vendor/katex/0.16.9/contrib/auto-render.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      renderMathInElement(document.body, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "\\(", right: "\\)", display: false },
+          { left: "$",  right: "$",  display: false }
+        ],
+        macros: {"\\C":"\\mathbf{C}","\\N":"\\mathbf{N}","\\Q":"\\mathbf{Q}","\\R":"\\mathbf{R}","\\Z":"\\mathbf{Z}","\\abs":"\\left| #1 \\right|","\\bra":"\\langle #1 \\rvert","\\braket":"\\langle #1 \\mid #2 \\rangle","\\cat":"\\texttt{#1}","\\iso":"\\simeq","\\ket":"\\lvert #1 \\rangle","\\norm":"\\left\\| #1 \\right\\|","\\set":"\\{\\, #1 \\,\\}"},
+        throwOnError: false
+      });
+    });
+  </script>
+
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "2D Topological Quantum Field Theories and Commutative Frobenius Algebras",
+    "description": "2D TQFT equivalence with commutative Frobenius algebras",
+    "datePublished": "2023-03-03",
+    "dateModified": "2025-01-06",
+    "author": { "@type": "Person", "name": "Luiz Mugnaini" },
+    "publisher": { "@type": "Person", "name": "Luiz Mugnaini" },
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://operad.dev/2d-tqft-frobenius/" },
+    "image": "https://operad.dev/favicon_letter-512x512.png"
+  }
+  </script>
+</head>
+
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+  <div class="container site-header__inner">
+    <a class="wordmark" href="https://operad.dev">
+      <img class="wordmark__icon" src="/favicon_knot-192x192.png" alt="" width="20" height="20">
+      operad.dev
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul><li><a href="https://operad.dev/">notes</a></li><li><a href="https://operad.dev/about/">about</a></li><li><a href="https://operad.dev/work/">work</a></li><li><a href="https://git.sr.ht/~luizmugnaini" target="_blank" rel="noopener noreferrer">code</a></li><li><a href="https://operad.dev/links/">links</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+  <main id="main" class="container content">
+    
+<article class="post">
+  <header class="post-header">
+    <h1 class="post-title">2D Topological Quantum Field Theories and Commutative Frobenius Algebras</h1>
+    
+<div class="post-meta">
+  <time datetime="2023-03-03">2023-03-03</time>
+  <span class="post-meta__updated">updated <time datetime="2025-01-06">2025-01-06</time></span>
+  <span class="post-meta__tags">
+    <a class="tag" href="https://operad.dev/tags/mathematical-physics/">#mathematical-physics</a> 
+    <a class="tag" href="https://operad.dev/tags/mathematics/">#mathematics</a>
+  </span>
+</div>
+
+  </header>
+  <div class="prose">
+    <p>As a final project for my <a rel="external" href="https://sites.google.com/view/cristian-ortiz/usp2022-math-physics">mathematical-physics class</a>
+I studied the categorical equivalence between 2-dimensional topological
+quantum field theories (TQFT) and the category of commutative Frobenius algebras.
+This led to an interesting study paper, which I’m now making publicly accessible.</p>
+
+<figure class="figure figure--math">
+<span class="math-display">$$\begin{CD}
+F(a \otimes b)               @>{\eta_{a \otimes b}}>>            G(a \otimes b) \cr
+@V{\iso}VV                                                       @VV{\iso}V \cr
+F a \widehat\otimes F b      @>>{\eta_a \widehat\otimes \eta_b}> G a \widehat\otimes G b
+\end{CD}$$</span>
+<figcaption class="figure__caption">Universal property of monoidal natural transformations</figcaption>
+</figure>
+<p>The paper is divided into 9 sections:</p>
+<ol>
+<li><strong>Monoidal categories</strong>: This section serves as the foundation language of the
+paper, monoidal categories and their properties.</li>
+<li><strong>Braided &amp; symmetric monoidal categories</strong>: Here, we briefly delve into a
+special class of monoidal categories that permit commutative behaviour with
+respect to the associated bifunctor product.</li>
+<li><strong>Cobordisms</strong>: A central idea in topological quantum field theories is the
+gluing of smooth compact manifolds without boundary, which is what cobordisms
+are all about.</li>
+<li><strong>Elements of Morse theory</strong>: We provide a very introductory discussion of Morse theory,
+just showing some key results required for the rest of the paper.</li>
+<li><strong>The category $n$-$\cat{cob}$</strong>: One of the building blocks of the main theorem of
+the paper is the category of cobordisms of a given dimension $n$,
+made up of compact oriented $(n - 1)$-dimensional manifolds.</li>
+<li><strong>Monoidal structure of $n$-$\cat{cob}$</strong>: As expected, the category of cobordisms
+exhibits some good properties, and in particular it admits a monoidal
+structure.</li>
+<li><strong>Frobenius Algebras</strong>: Within the framework of monoidal categories, we study
+our second main character: Frobenius algebras.</li>
+<li><strong>Topological quantum field theories</strong>: In this section we can finally define
+what we mean by a TQFT.</li>
+<li><strong>Equivalence theorems</strong>: Reaching the climax of the paper, we delve into the
+theorems that motivated its creation in the first place.</li>
+</ol>
+<p>The full paper is <a href="https://operad.dev/2d-tqft-frobenius/2d-tqft-frobenius.pdf">available as a PDF</a>.</p>
+
+  </div>
+  
+  <nav class="post-pager" aria-label="More posts">
+    <a class="post-pager__prev" rel="prev" href="https://operad.dev/chirp/">&larr; Exploring Emulation With Chirp, a CHIP-8 Interpreter</a>
+    <a class="post-pager__next" rel="next" href="https://operad.dev/memory-management/">Practical Memory Management &rarr;</a>
+  </nav>
+  
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <div class="container site-footer__inner">
+    <p>
+      &copy; 2026 Luiz Mugnaini
+      &middot; <a href="https://operad.dev/atom.xml">feed</a>
+      &middot; <a href="https://git.sr.ht/~luizmugnaini" rel="noopener">code</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

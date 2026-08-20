@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <meta name="theme-color" content="#faf6ee" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14141a" media="(prefers-color-scheme: dark)">
+
+  <title>Exploring Emulation With Chirp, a CHIP-8 Interpreter — operad.dev</title>
+
+  <meta name="description" content="A simple CHIP-8 interpreter">
+  <meta name="author" content="Luiz Mugnaini">
+
+  <link rel="canonical" href="https://operad.dev/chirp/">
+
+  
+  <meta property="og:title" content="Exploring Emulation With Chirp, a CHIP-8 Interpreter">
+  <meta property="og:description" content="A simple CHIP-8 interpreter">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://operad.dev/chirp/">
+  <meta property="og:site_name" content="operad.dev">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:image" content="https://operad.dev/favicon_letter-512x512.png">
+
+  <link rel="stylesheet" href="https://operad.dev/main.css?h=bec186606d61b1230339">
+
+  <link rel="alternate" type="application/atom+xml" href="https://operad.dev/atom.xml" title="operad.dev">
+
+  <link rel="icon" type="image/png" href="/favicon_knot-192x192.png">
+
+  
+
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Exploring Emulation With Chirp, a CHIP-8 Interpreter",
+    "description": "A simple CHIP-8 interpreter",
+    "datePublished": "2023-02-23",
+    "dateModified": "2025-06-01",
+    "author": { "@type": "Person", "name": "Luiz Mugnaini" },
+    "publisher": { "@type": "Person", "name": "Luiz Mugnaini" },
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://operad.dev/chirp/" },
+    "image": "https://operad.dev/favicon_letter-512x512.png"
+  }
+  </script>
+</head>
+
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+  <div class="container site-header__inner">
+    <a class="wordmark" href="https://operad.dev">
+      <img class="wordmark__icon" src="/favicon_knot-192x192.png" alt="" width="20" height="20">
+      operad.dev
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul><li><a href="https://operad.dev/">notes</a></li><li><a href="https://operad.dev/about/">about</a></li><li><a href="https://operad.dev/work/">work</a></li><li><a href="https://git.sr.ht/~luizmugnaini" target="_blank" rel="noopener noreferrer">code</a></li><li><a href="https://operad.dev/links/">links</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+  <main id="main" class="container content">
+    
+<article class="post">
+  <header class="post-header">
+    <h1 class="post-title">Exploring Emulation With Chirp, a CHIP-8 Interpreter</h1>
+    
+<div class="post-meta">
+  <time datetime="2023-02-23">2023-02-23</time>
+  <span class="post-meta__updated">updated <time datetime="2025-06-01">2025-06-01</time></span>
+  <span class="post-meta__tags">
+    <a class="tag" href="https://operad.dev/tags/emulation/">#emulation</a> 
+    <a class="tag" href="https://operad.dev/tags/programming/">#programming</a> 
+    <a class="tag" href="https://operad.dev/tags/side-project/">#side-project</a>
+  </span>
+</div>
+
+  </header>
+  <div class="prose">
+    <p>One of my long-term aspirations is to forge an emulator for the legendary <a rel="external" href="https://en.wikipedia.org/wiki/Game_Boy">Game
+Boy</a> console. As a side-quest, I decided to write a virtual
+machine for the <a rel="external" href="https://en.wikipedia.org/wiki/CHIP-8">CHIP-8</a> interpreted language from the
+mid-1970s.  Although not a hardware emulation project, it makes you dig a bit into techniques
+common to emulation software.</p>
+<figure class="figure figure--center">
+  <img src="https://operad.dev/chirp/maze.png"
+       alt="Screenshot of the MAZE game running on chirp" width="1272" height="633"
+       loading="lazy" decoding="async">
+  <figcaption class="figure__caption">MAZE game running on <code>chirp</code></figcaption>
+</figure>
+<p>The heart of <a rel="external" href="https://git.sr.ht/~luizmugnaini/chirp"><code>chirp</code></a>
+is an interpreter of the CHIP-8 programming
+language, with roots in the early days of game development. This project can serve as learning
+material for someone interested in dipping their toes in low-level waters. The project is written in
+Rust.</p>
+<figure class="figure figure--center">
+  <img src="https://operad.dev/chirp/invaders.png"
+       alt="Screenshot of the Space Invaders game running on chirp" width="1261" height="636"
+       loading="lazy" decoding="async">
+  <figcaption class="figure__caption">Space Invaders game running on <code>chirp</code></figcaption>
+</figure>
+<p>I tried to make the external dependencies as minimal as possible:</p>
+<ul>
+<li><a rel="external" href="https://crates.io/crates/rand"><code>rand</code></a>.</li>
+<li><a rel="external" href="https://www.libsdl.org/">SDL2</a>.</li>
+</ul>
+<p>Sure, the number of dependencies is minimal, but that doesn’t make the external code smaller. As is
+commonly the case in Rust land, these dependencies are definitely not minimal. SDL2 is an absolute
+beast and many of its features are not necessary for this project — it could be completely
+replaced by a simple hand-rolled OS-dependent windowing and input handling implementation, however I
+didn’t bother doing this for this simple side-project.</p>
+<p>Throughout the creation of <code>chirp</code>, I found <a rel="external" href="http://devernay.free.fr/hacks/chip8/C8TECH10.HTM">Cowgod’s CHIP-8 Technical
+Reference</a> to be an awesome resource, serving as
+the main reference for the project.</p>
+
+  </div>
+  
+  <nav class="post-pager" aria-label="More posts">
+    <a class="post-pager__prev" rel="prev" href="https://operad.dev/deep-dive/">&larr; Deep Dive</a>
+    <a class="post-pager__next" rel="next" href="https://operad.dev/2d-tqft-frobenius/">2D Topological Quantum Field Theories and Commutative Frobenius Algebras &rarr;</a>
+  </nav>
+  
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <div class="container site-footer__inner">
+    <p>
+      &copy; 2026 Luiz Mugnaini
+      &middot; <a href="https://operad.dev/atom.xml">feed</a>
+      &middot; <a href="https://git.sr.ht/~luizmugnaini" rel="noopener">code</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

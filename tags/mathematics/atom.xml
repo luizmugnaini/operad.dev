@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>operad.dev - mathematics</title>
+    <subtitle>Notes on mathematics &amp; programming — Luiz Mugnaini.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://operad.dev/tags/mathematics/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://operad.dev"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2026-05-15T00:00:00+00:00</updated>
+    <id>https://operad.dev/tags/mathematics/atom.xml</id>
+    <entry xml:lang="en">
+        <title>2D Topological Quantum Field Theories and Commutative Frobenius Algebras</title>
+        <published>2023-03-03T00:00:00+00:00</published>
+        <updated>2025-01-06T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://operad.dev/2d-tqft-frobenius/"/>
+        <id>https://operad.dev/2d-tqft-frobenius/</id>
+        
+        <content type="html" xml:base="https://operad.dev/2d-tqft-frobenius/">&lt;p&gt;As a final project for my &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;sites.google.com&#x2F;view&#x2F;cristian-ortiz&#x2F;usp2022-math-physics&quot;&gt;mathematical-physics class&lt;&#x2F;a&gt;
+I studied the categorical equivalence between 2-dimensional topological
+quantum field theories (TQFT) and the category of commutative Frobenius algebras.
+This led to an interesting study paper, which I’m now making publicly accessible.&lt;&#x2F;p&gt;
+
+&lt;figure class=&quot;figure figure--math&quot;&gt;
+&lt;span class=&quot;math-display&quot;&gt;$$\begin{CD}
+F(a \otimes b)               @&gt;{\eta_{a \otimes b}}&gt;&gt;            G(a \otimes b) \cr
+@V{\iso}VV                                                       @VV{\iso}V \cr
+F a \widehat\otimes F b      @&gt;&gt;{\eta_a \widehat\otimes \eta_b}&gt; G a \widehat\otimes G b
+\end{CD}$$&lt;&#x2F;span&gt;
+&lt;figcaption class=&quot;figure__caption&quot;&gt;Universal property of monoidal natural transformations&lt;&#x2F;figcaption&gt;
+&lt;&#x2F;figure&gt;
+&lt;p&gt;The paper is divided into 9 sections:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Monoidal categories&lt;&#x2F;strong&gt;: This section serves as the foundation language of the
+paper, monoidal categories and their properties.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Braided &amp;amp; symmetric monoidal categories&lt;&#x2F;strong&gt;: Here, we briefly delve into a
+special class of monoidal categories that permit commutative behaviour with
+respect to the associated bifunctor product.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Cobordisms&lt;&#x2F;strong&gt;: A central idea in topological quantum field theories is the
+gluing of smooth compact manifolds without boundary, which is what cobordisms
+are all about.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Elements of Morse theory&lt;&#x2F;strong&gt;: We provide a very introductory discussion of Morse theory,
+just showing some key results required for the rest of the paper.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;The category $n$-$\cat{cob}$&lt;&#x2F;strong&gt;: One of the building blocks of the main theorem of
+the paper is the category of cobordisms of a given dimension $n$,
+made up of compact oriented $(n - 1)$-dimensional manifolds.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Monoidal structure of $n$-$\cat{cob}$&lt;&#x2F;strong&gt;: As expected, the category of cobordisms
+exhibits some good properties, and in particular it admits a monoidal
+structure.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Frobenius Algebras&lt;&#x2F;strong&gt;: Within the framework of monoidal categories, we study
+our second main character: Frobenius algebras.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Topological quantum field theories&lt;&#x2F;strong&gt;: In this section we can finally define
+what we mean by a TQFT.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Equivalence theorems&lt;&#x2F;strong&gt;: Reaching the climax of the paper, we delve into the
+theorems that motivated its creation in the first place.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;The full paper is &lt;a href=&quot;https:&#x2F;&#x2F;operad.dev&#x2F;2d-tqft-frobenius&#x2F;2d-tqft-frobenius.pdf&quot;&gt;available as a PDF&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Deep Dive</title>
+        <published>2023-02-23T00:00:00+00:00</published>
+        <updated>2026-05-15T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://operad.dev/deep-dive/"/>
+        <id>https://operad.dev/deep-dive/</id>
+        
+        <content type="html" xml:base="https://operad.dev/deep-dive/">&lt;p&gt;Since 2020 I have been documenting my studies in mathematics. This process ended up generating
+something that resembles a book. It is with the hope of illuminating the path for fellow nerds that
+I decided to share my collection of notes publicly.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;Deep Dive&lt;&#x2F;em&gt; is the title I’ve chosen for my ever-evolving collection of personal notes. I claim
+absolutely &lt;em&gt;no&lt;&#x2F;em&gt; originality in any of my writings, instead they can be thought of as a compilation of
+lectures I’ve watched, as well as books and papers I’ve read — but written down in my own words and
+with my own explanations.&lt;&#x2F;p&gt;
+&lt;p&gt;It must be stressed that this document is an endless work in progress, it will &lt;em&gt;never&lt;&#x2F;em&gt; be
+finished. It primarily serves as a repository of personal notes created for my own
+benefit. Expect linguistic and mathematical errors scattered throughout. As time permits, I plan to
+revise and refine this work in the distant future — rectifying most of my silly mistakes I’ve made
+along the way.&lt;&#x2F;p&gt;
+&lt;p&gt;The first catalyst of this set of notes was a draft of &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;web.stanford.edu&#x2F;~dkim04&#x2F;&quot;&gt;Dongryul
+Kim&lt;&#x2F;a&gt; titled &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;web.stanford.edu&#x2F;~dkim04&#x2F;blog&#x2F;linear-algebra-book&#x2F;&quot;&gt;&lt;em&gt;A rough guide to linear
+algebra&lt;&#x2F;em&gt;&lt;&#x2F;a&gt;, which aims to give a
+sophisticated introduction to linear algebra; making extensive use of &lt;em&gt;category theory&lt;&#x2F;em&gt; — it was
+probably my first introduction to actual modern mathematics. My interaction with this draft set me
+on my journey in mathematics, and for that I’m profoundly grateful. For this exact reason I thought
+of making &lt;em&gt;Deep Dive&lt;&#x2F;em&gt; available for anyone that might be interested in this kind of writing.&lt;&#x2F;p&gt;
+&lt;p&gt;Both the &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;git.sr.ht&#x2F;~luizmugnaini&#x2F;deep-dive&quot;&gt;source&lt;&#x2F;a&gt;
+and a &lt;a href=&quot;https:&#x2F;&#x2F;operad.dev&#x2F;deep-dive&#x2F;deep-dive.pdf&quot;&gt;compiled PDF&lt;&#x2F;a&gt; are
+available.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>
