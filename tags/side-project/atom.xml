@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>operad.dev - side-project</title>
+    <subtitle>Notes on mathematics &amp; programming — Luiz Mugnaini.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://operad.dev/tags/side-project/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://operad.dev"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2025-06-01T00:00:00+00:00</updated>
+    <id>https://operad.dev/tags/side-project/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Exploring Emulation With Chirp, a CHIP-8 Interpreter</title>
+        <published>2023-02-23T00:00:00+00:00</published>
+        <updated>2025-06-01T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Unknown
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://operad.dev/chirp/"/>
+        <id>https://operad.dev/chirp/</id>
+        
+        <content type="html" xml:base="https://operad.dev/chirp/">&lt;p&gt;One of my long-term aspirations is to forge an emulator for the legendary &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Game_Boy&quot;&gt;Game
+Boy&lt;&#x2F;a&gt; console. As a side-quest, I decided to write a virtual
+machine for the &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;CHIP-8&quot;&gt;CHIP-8&lt;&#x2F;a&gt; interpreted language from the
+mid-1970s.  Although not a hardware emulation project, it makes you dig a bit into techniques
+common to emulation software.&lt;&#x2F;p&gt;
+&lt;figure class=&quot;figure figure--center&quot;&gt;
+  &lt;img src=&quot;https:&#x2F;&#x2F;operad.dev&#x2F;chirp&#x2F;maze.png&quot;
+       alt=&quot;Screenshot of the MAZE game running on chirp&quot; width=&quot;1272&quot; height=&quot;633&quot;
+       loading=&quot;lazy&quot; decoding=&quot;async&quot;&gt;
+  &lt;figcaption class=&quot;figure__caption&quot;&gt;MAZE game running on &lt;code&gt;chirp&lt;&#x2F;code&gt;&lt;&#x2F;figcaption&gt;
+&lt;&#x2F;figure&gt;
+&lt;p&gt;The heart of &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;git.sr.ht&#x2F;~luizmugnaini&#x2F;chirp&quot;&gt;&lt;code&gt;chirp&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;
+is an interpreter of the CHIP-8 programming
+language, with roots in the early days of game development. This project can serve as learning
+material for someone interested in dipping their toes in low-level waters. The project is written in
+Rust.&lt;&#x2F;p&gt;
+&lt;figure class=&quot;figure figure--center&quot;&gt;
+  &lt;img src=&quot;https:&#x2F;&#x2F;operad.dev&#x2F;chirp&#x2F;invaders.png&quot;
+       alt=&quot;Screenshot of the Space Invaders game running on chirp&quot; width=&quot;1261&quot; height=&quot;636&quot;
+       loading=&quot;lazy&quot; decoding=&quot;async&quot;&gt;
+  &lt;figcaption class=&quot;figure__caption&quot;&gt;Space Invaders game running on &lt;code&gt;chirp&lt;&#x2F;code&gt;&lt;&#x2F;figcaption&gt;
+&lt;&#x2F;figure&gt;
+&lt;p&gt;I tried to make the external dependencies as minimal as possible:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;rand&quot;&gt;&lt;code&gt;rand&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.libsdl.org&#x2F;&quot;&gt;SDL2&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Sure, the number of dependencies is minimal, but that doesn’t make the external code smaller. As is
+commonly the case in Rust land, these dependencies are definitely not minimal. SDL2 is an absolute
+beast and many of its features are not necessary for this project — it could be completely
+replaced by a simple hand-rolled OS-dependent windowing and input handling implementation, however I
+didn’t bother doing this for this simple side-project.&lt;&#x2F;p&gt;
+&lt;p&gt;Throughout the creation of &lt;code&gt;chirp&lt;&#x2F;code&gt;, I found &lt;a rel=&quot;external&quot; href=&quot;http:&#x2F;&#x2F;devernay.free.fr&#x2F;hacks&#x2F;chip8&#x2F;C8TECH10.HTM&quot;&gt;Cowgod’s CHIP-8 Technical
+Reference&lt;&#x2F;a&gt; to be an awesome resource, serving as
+the main reference for the project.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

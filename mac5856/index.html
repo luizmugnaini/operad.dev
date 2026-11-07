@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <meta name="theme-color" content="#faf6ee" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14141a" media="(prefers-color-scheme: dark)">
+
+  <title>MAC5856 — Road To The Linux Kernel — operad.dev</title>
+
+  <meta name="description" content="The process behind contributing to the Linux Kernel">
+  <meta name="author" content="Luiz Mugnaini">
+
+  <link rel="canonical" href="https://operad.dev/mac5856/">
+
+  
+  <meta property="og:title" content="MAC5856 — Road To The Linux Kernel">
+  <meta property="og:description" content="The process behind contributing to the Linux Kernel">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://operad.dev/mac5856/">
+  <meta property="og:site_name" content="operad.dev">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:image" content="https://operad.dev/favicon_letter-512x512.png">
+
+  <link rel="stylesheet" href="https://operad.dev/main.css?h=bec186606d61b1230339">
+
+  <link rel="alternate" type="application/atom+xml" href="https://operad.dev/atom.xml" title="operad.dev">
+
+  <link rel="icon" type="image/png" href="/favicon_knot-192x192.png">
+
+  
+
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "MAC5856 — Road To The Linux Kernel",
+    "description": "The process behind contributing to the Linux Kernel",
+    "datePublished": "2026-03-19",
+    "dateModified": "2026-03-19",
+    "author": { "@type": "Person", "name": "Luiz Mugnaini" },
+    "publisher": { "@type": "Person", "name": "Luiz Mugnaini" },
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://operad.dev/mac5856/" },
+    "image": "https://operad.dev/favicon_letter-512x512.png"
+  }
+  </script>
+</head>
+
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+  <div class="container site-header__inner">
+    <a class="wordmark" href="https://operad.dev">
+      <img class="wordmark__icon" src="/favicon_knot-192x192.png" alt="" width="20" height="20">
+      operad.dev
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul><li><a href="https://operad.dev/">notes</a></li><li><a href="https://operad.dev/about/">about</a></li><li><a href="https://operad.dev/work/">work</a></li><li><a href="https://git.sr.ht/~luizmugnaini" target="_blank" rel="noopener noreferrer">code</a></li><li><a href="https://operad.dev/links/">links</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+  <main id="main" class="container content">
+    
+<article class="post">
+  <header class="post-header">
+    <h1 class="post-title">MAC5856 — Road To The Linux Kernel</h1>
+    
+<div class="post-meta">
+  <time datetime="2026-03-19">2026-03-19</time>
+  <span class="post-meta__tags">
+    <a class="tag" href="https://operad.dev/tags/kernel/">#kernel</a> 
+    <a class="tag" href="https://operad.dev/tags/linux/">#linux</a> 
+    <a class="tag" href="https://operad.dev/tags/programming/">#programming</a>
+  </span>
+</div>
+
+  </header>
+  <div class="prose">
+    <p>This post is a collection of reports on the <a rel="external" href="https://flusp.ime.usp.br/kernel/">tutorials</a> provided
+for the <a rel="external" href="https://edisciplinas.usp.br/course/view.php?id=139055">MAC5856 class</a> for Open Source
+Development.</p>
+<p>More specifically, the tutorial pages provide a guide on how to set up a development environment for
+building and developing the Linux kernel.</p>
+<p>After years of being an Arch Linux user, I’ve opted for going with a Fedora installation for a
+change. This required some small changes with respect to the tutorials — all of them are documented
+below.</p>
+<h2 id="tutorial-1-qemu-and-libvirt-setup">Tutorial 1 — QEMU and Libvirt Setup</h2>
+<p>This first tutorial focuses on the creation of the basis for the development setup, such as the
+installation of all necessary packages for virtualisation.</p>
+<ul>
+<li>
+<p>Although the tutorial uses the <code>libvirt-qemu</code> user for the directory ownership, I had to go with
+the <code>qemu</code> user in Fedora.</p>
+</li>
+<li>
+<p>To avoid having to use <code>sudo</code> every time I use <code>virsh</code>, I opted for creating a tiny wrapper
+<code>virshh</code> in the <code>activate.sh</code> script that solves this:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #BB9AF7;">function</span><span style="color: #7AA2F7;"> virshh</span><span style="color: #9ABDF5;">() {</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    virsh</span><span style="color: #E0AF68;"> --connect</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #9ECE6A;">qemu:///system</span><span style="color: #89DDFF;">&quot;</span><span style="color: #E0AF68;"> $@</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">export</span><span style="color: #E0AF68;"> -f</span><span style="color: #C0CAF5;"> virshh</span></span></code></pre>
+<p>Now instead of using <code>virsh</code> I use <code>virshh</code> and it’s working flawlessly so far.</p>
+</li>
+<li>
+<p>As many other students reported, I also had to install the <code>openssh-server</code> package in the VM:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">apt</span><span style="color: #9ECE6A;"> update</span><span style="color: #89DDFF;"> &amp;&amp;</span><span style="color: #C0CAF5;"> apt</span><span style="color: #9ECE6A;"> install openssh-server</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    systemctl</span><span style="color: #9ECE6A;"> enable ssh</span><span style="color: #89DDFF;"> &amp;&amp;</span><span style="color: #C0CAF5;"> systemctl</span><span style="color: #9ECE6A;"> start ssh</span><span style="color: #89DDFF;"> &amp;&amp;</span><span style="color: #C0CAF5;"> systemctl</span><span style="color: #9ECE6A;"> status ssh</span></span></code></pre></li>
+</ul>
+<h2 id="tutorial-2-building-and-booting-the-kernel">Tutorial 2 — Building and Booting The Kernel</h2>
+<ul>
+<li>
+<p>I wasn’t able to use <code>rsync</code> to fetch the <code>vm_mod_list</code> we created in the last tutorial. For that
+I had to install <code>rsync</code> in the VM first.</p>
+</li>
+<li>
+<p>I had a very annoying problem when creating the new VM: the system would never completely
+boot. Instead <code>virt-install</code> would halt very early and never finish the creation of the VM
+itself. After many attempts, this version worked:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">export</span><span style="color: #C0CAF5;"> img_file</span><span style="color: #89DDFF;">=&quot;${</span><span style="color: #C0CAF5;">VM_DIR</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">/arm64_img.qcow2</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">export</span><span style="color: #C0CAF5;"> root_vda</span><span style="color: #89DDFF;">=&quot;</span><span style="color: #9ECE6A;">/dev/vda2</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">export</span><span style="color: #C0CAF5;"> kernel_file</span><span style="color: #89DDFF;">=&quot;${</span><span style="color: #C0CAF5;">IIO_TREE</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">/arch/arm64/boot/Image</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">export</span><span style="color: #C0CAF5;"> initrd_file</span><span style="color: #89DDFF;">=&quot;${</span><span style="color: #C0CAF5;">BOOT_DIR</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">/initrd.img-6.1.0-44-arm64</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">export</span><span style="color: #C0CAF5;"> vm_name</span><span style="color: #89DDFF;">=&quot;</span><span style="color: #9ECE6A;">arm64</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">function</span><span style="color: #7AA2F7;"> create-vm-virsh</span><span style="color: #9ABDF5;">() {</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    sudo</span><span style="color: #9ECE6A;"> virt-install</span><span style="color: #89DDFF;">                                                                                         \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">        --name</span><span style="color: #89DDFF;"> ${</span><span style="color: #C0CAF5;">vm_name</span><span style="color: #89DDFF;">}                                                                                     \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">        --memory</span><span style="color: #FF9E64;"> 2048</span><span style="color: #89DDFF;">                                                                                         \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">        --arch</span><span style="color: #9ECE6A;"> aarch64</span><span style="color: #89DDFF;">                                                                                        \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">        --machine</span><span style="color: #9ECE6A;"> virt</span><span style="color: #89DDFF;">                                                                                        \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">        --osinfo</span><span style="color: #9ECE6A;"> detect=on,require=off</span><span style="color: #89DDFF;">                                                                        \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">        --import</span><span style="color: #89DDFF;">                                                                                              \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">        --features</span><span style="color: #9ECE6A;"> acpi=off</span><span style="color: #89DDFF;">                                                                                   \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">        --disk</span><span style="color: #9ECE6A;"> path=</span><span style="color: #89DDFF;">${</span><span style="color: #C0CAF5;">img_file</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">,bus=virtio,format=qcow2</span><span style="color: #89DDFF;">                                                       \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">        --boot</span><span style="color: #9ECE6A;"> kernel=</span><span style="color: #89DDFF;">${</span><span style="color: #C0CAF5;">kernel_file</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">,initrd=</span><span style="color: #89DDFF;">${</span><span style="color: #C0CAF5;">initrd_file</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">,kernel_args=</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;">loglevel=8 root=</span><span style="color: #89DDFF;">${</span><span style="color: #C0CAF5;">root_vda</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;"> rootwait</span><span style="color: #89DDFF;">&quot; \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">        --network</span><span style="color: #9ECE6A;"> bridge:virbr0</span><span style="color: #89DDFF;">                                                                               \</span></span>
+<span class="giallo-l"><span style="color: #E0AF68;">        --graphics</span><span style="color: #9ECE6A;"> none</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>The problem seems to be that the device mapping was not going as expected but adding the
+<code>bus=virtio,format=qcow2</code> did the job.</p>
+</li>
+</ul>
+<h2 id="tutorial-3-modules-and-build-config">Tutorial 3 — Modules and Build Config</h2>
+<p>Pretty much uneventful tutorial, very easy to follow. For some reason I had to restart the VM
+network system with</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">systemctl</span><span style="color: #9ECE6A;"> restart systemd-networkd</span></span></code></pre>
+<p>Because <code>virsh net-dhcp-leases default</code> was failing to find any open connections even though its
+networking capabilities were on.</p>
+<h2 id="tutorial-4-device-characters">Tutorial 4 — Device Characters</h2>
+<p>My only trouble in this tutorial was cross-compiling the host programs. Fedora doesn’t ship a
+complete aarch64-compliant toolchain like Debian, so the easiest way around it (without manually
+installing an arm64-sysroot) was to use the Zig cross-compiler — which is honestly a shame for C/C++
+compilers as it should’ve been easier with them anyway… Here is the simple command that made it
+work:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">zig</span><span style="color: #9ECE6A;"> cc</span><span style="color: #E0AF68;"> -target</span><span style="color: #9ECE6A;"> aarch64-linux-gnu read_prog.c</span><span style="color: #E0AF68;"> -o</span><span style="color: #9ECE6A;"> read_prog</span></span></code></pre><h2 id="tutorial-5-sending-patches-by-email-with-git">Tutorial 5 — Sending Patches By Email With Git</h2>
+<p>I only needed to follow this tutorial because of my new Linux install, however I’ve already had
+experience setting up git’s email support before, so it went quite smoothly using the Thunderbird
+client setup.</p>
+<h2 id="tutorial-6-sending-patches-with-git-and-a-usp-email">Tutorial 6 — Sending Patches With Git and a USP Email</h2>
+<p>In this tutorial I first tried following option A (using git-credential-email), however when I tried
+to authenticate, I got an error saying that “DSL 2026 OAuth Proxy has not completed the Google
+verification process”. Since I don’t have access to the “DSL 2026 OAuth Proxy” project, I decided to
+go with option B — which involves using email-oauth2-proxy.</p>
+<p>I didn’t have Docker installed so I needed to configure the following:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #51597D;font-style: italic;"># Install dependencies.</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">sudo</span><span style="color: #9ECE6A;"> dnf install docker docker-compose</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># Start and enable the daemon.</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">sudo</span><span style="color: #9ECE6A;"> systemctl start docker</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">sudo</span><span style="color: #9ECE6A;"> systemctl enable docker</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;"># Add yourself to the auto-created docker group and log into the group.</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">sudo</span><span style="color: #9ECE6A;"> usermod</span><span style="color: #E0AF68;"> -aG</span><span style="color: #9ECE6A;"> docker</span><span style="color: #C0CAF5;"> $USER</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">newgrp</span><span style="color: #9ECE6A;"> docker</span></span></code></pre><h2 id="tutorial-7-the-iio-simple-dummy-anatomy">Tutorial 7 — The iio_simple_dummy Anatomy</h2>
+<p>In this tutorial we set out to start understanding the inner workings of the module <code>iio_dummy</code>. The
+code itself is fairly standard C99 and the tutorial focuses on explaining the usage of
+<code>iio_chan_spec</code>, which is used to describe channels to simulate sensors. One interesting thing I
+inspected further was the memory allocation function <code>kzalloc</code> — which seems to be the recommended
+way to allocate in the kernel for a general situation. The <code>kzalloc</code> simply zeroes the memory region
+before returning, which is a thing I started doing in my codebases — all of my high-level allocation
+functions already do this. It was also interesting to see the go-to patterns used for error handling
+which is quite down-to-earth and easy to follow.</p>
+<h2 id="tutorial-8-iio-dummy-module-experiment-one-play-with-iio-dummy">Tutorial 8 — IIO Dummy module Experiment One: Play with iio_dummy</h2>
+<p>This tutorial was a bit frustrating on the part of installing the newly built module. I managed to
+correctly install the necessary modules by doing the following:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">sudo</span><span style="color: #9ECE6A;"> mkdir</span><span style="color: #89DDFF;"> ${</span><span style="color: #C0CAF5;">VM_DIR</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">/mount</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">sudo</span><span style="color: #9ECE6A;"> guestmount</span><span style="color: #E0AF68;"> --rw --add</span><span style="color: #89DDFF;"> &quot;${</span><span style="color: #C0CAF5;">VM_DIR</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">/arm64_img.qcow2</span><span style="color: #89DDFF;">&quot;</span><span style="color: #E0AF68;"> --mount</span><span style="color: #9ECE6A;"> /dev/sda2</span><span style="color: #89DDFF;"> &quot;${</span><span style="color: #C0CAF5;">VM_DIR</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">/mount</span><span style="color: #89DDFF;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">sudo</span><span style="color: #E0AF68;"> --preserve-env</span><span style="color: #9ECE6A;"> make</span><span style="color: #E0AF68;"> -C</span><span style="color: #89DDFF;"> &quot;${</span><span style="color: #C0CAF5;">IIO_TREE</span><span style="color: #89DDFF;">}&quot;</span><span style="color: #9ECE6A;"> INSTALL_MOD_PATH=</span><span style="color: #89DDFF;">&quot;${</span><span style="color: #C0CAF5;">VM_DIR</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">/mount</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ECE6A;"> modules_install</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">sudo</span><span style="color: #9ECE6A;"> guestunmount</span><span style="color: #89DDFF;"> &quot;${</span><span style="color: #C0CAF5;">VM_DIR</span><span style="color: #89DDFF;">}</span><span style="color: #9ECE6A;">/mount</span><span style="color: #89DDFF;">&quot;</span></span></code></pre>
+<p>I added an analogous code as a utility function in the <code>activate.sh</code> script so that I don’t have to
+remember how to do it every time it shows up.</p>
+<p>In order to have <code>/mnt/iio_experiments/iio/devices</code> present you have to have <code>iio_dummy</code> loaded,
+which contradicts the last step of the tutorial where we actually unload <code>iio_dummy</code> before mounting
+<code>configfs</code> into <code>/mnt/iio_experiments/</code>.</p>
+<p>In the <code>__iio_dummy_read_raw</code> procedure I figured that the correct approach was to substitute the
+<code>ret = IIO_VAL_INT</code> line with a simple <code>return IIO_VAL_INT</code>. Analogously, in the
+<code>iio_dummy_read_raw</code> I had to substitute <code>ret = IIO_VAL_INT_PLUS_MICRO</code> with <code>return IIO_VAL_INT_PLUS_MICRO</code>.</p>
+<p>The remainder of the tutorial went pretty much uneventful.</p>
+<h2 id="moving-to-guard-mutex-lock-and-general-locking-considerations">Moving To guard(mutex)(&amp;lock) and General Locking Considerations</h2>
+<p>I chose a very simple but interesting patch to tackle, updating <code>iio/drivers/iio/temperature/mlx90614.c</code>
+to conform with the new guidance for handling locks in the Linux kernel codebase. The move consists in
+changing instances of <code>mutex_lock(&amp;lock)</code> and <code>mutex_unlock(&amp;lock)</code> with the macro <code>guard(mutex)(&amp;lock)</code>.
+Let’s understand what <code>guard</code> really means:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="c"><span class="giallo-l"><span style="color: #89DDFF;">#</span><span style="color: #BB9AF7;">define</span><span style="color: #7AA2F7;"> CLASS</span><span style="color: #9ABDF5;">(</span><span style="color: #E0AF68;">_name</span><span style="color: #89DDFF;">,</span><span style="color: #E0AF68;"> var</span><span style="color: #9ABDF5;">)</span><span style="color: #73DACA;"> class_##_name##_t var </span><span style="color: #7AA2F7;">__cleanup</span><span style="color: #9ABDF5;">(</span><span style="color: #73DACA;">class_##_name##_destructor</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;"> =</span><span style="color: #73DACA;"> class_##_name##_constructor</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#</span><span style="color: #BB9AF7;">define</span><span style="color: #7AA2F7;"> guard</span><span style="color: #9ABDF5;">(</span><span style="color: #E0AF68;">_name</span><span style="color: #9ABDF5;">)</span><span style="color: #7AA2F7;"> CLASS</span><span style="color: #9ABDF5;">(</span><span style="color: #73DACA;">_name</span><span style="color: #89DDFF;">,</span><span style="color: #7AA2F7;"> __UNIQUE_ID</span><span style="color: #9ABDF5;">(</span><span style="color: #73DACA;">guard</span><span style="color: #9ABDF5;">))</span></span></code></pre>
+<p>This is a very interesting pattern, the <code>mutex</code> is just part of the identifier for the
+<code>class_mutex_t</code> and the corresponding procedures <code>class_mutex_constructor</code> and <code>class_mutex_destructor</code>.
+The <code>guard</code> package will generate a unique name for the auxiliary variable in order to avoid name
+collisions. The <code>__cleanup</code> macro resolves to the compiler-specific attribute <code>__cleanup__</code>, which is
+available for Clang and GCC under <code>__attribute__((__cleanup__(cleanup_proc)))</code> where <code>cleanup_proc</code> is
+the name of the cleanup procedure you want the compiler to insert at the end of the scope. One
+problem with this construct is that it isn’t supported by all compilers. For one, MSVC doesn’t have
+this attribute.</p>
+<p>As an example, suppose we have a shared memory arena that will temporarily allocate memory and free that
+memory at the end of the scope. Since the arena is shared, you don’t want anyone touching the arena while
+you’re doing this temporary allocation, otherwise you may cause inconsistencies in the arena
+offset. To do that, you would write something along these lines:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="c"><span class="giallo-l"><span style="color: #51597D;font-style: italic;">// Code prior to scope ...</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">{</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    guard</span><span style="color: #9ABDF5;">(</span><span style="color: #7AA2F7;">work_arena</span><span style="color: #9ABDF5;">)(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #9ABDF5;">arena)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    guard</span><span style="color: #9ABDF5;">(</span><span style="color: #7AA2F7;">mutex</span><span style="color: #9ABDF5;">)(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #C0CAF5;">arena</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">lock</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // Code within the scope...</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">// Code after scope ...</span></span></code></pre>
+<p>In GCC, this would be <strong>roughly</strong> equivalent to the following code:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="c"><span class="giallo-l"><span style="color: #51597D;font-style: italic;">// Code prior to scope ...</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">{</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">    class_work_arena_t</span><span style="color: #9ABDF5;"> guard_0 </span><span style="color: #7AA2F7;">__attribute__</span><span style="color: #9ABDF5;">((</span><span style="color: #7AA2F7;">__cleanup__</span><span style="color: #9ABDF5;">(</span><span style="color: #7AA2F7;">class_work_arena_destructor</span><span style="color: #9ABDF5;">)))</span><span style="color: #89DDFF;"> =</span><span style="color: #7AA2F7;"> class_work_arena_constructor</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #7AA2F7;">arena</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #0DB9D7;">    class_mutex_t</span><span style="color: #9ABDF5;">      guard_1 </span><span style="color: #7AA2F7;">__attribute__</span><span style="color: #9ABDF5;">((</span><span style="color: #7AA2F7;">__cleanup__</span><span style="color: #9ABDF5;">(</span><span style="color: #7AA2F7;">class_mutex_destructor</span><span style="color: #9ABDF5;">)))</span><span style="color: #89DDFF;">      =</span><span style="color: #7AA2F7;"> class_mutex_constructor</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #C0CAF5;">arena</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">lock</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // Code within the scope...</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    class_mutex_destructor</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #7AA2F7;">guard_1</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    class_work_arena_destructor</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #7AA2F7;">guard_0</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">// Code after scope ...</span></span></code></pre>
+<p>After optimisations, the code will indeed be equivalent. However, in non-optimised builds, the
+compiler will emit a pointer lookup for the destructor procedures, creating one level of indirection
+in each cleanup call. The cost of this construct is relatively low compared to the cost of the
+inevitably forgotten cleanup calls.</p>
+<p>In the case of <code>mlx90614.c</code>, all instances of mutex lock/unlock pairs have the exact same pattern:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="c"><span class="giallo-l"><span style="color: #9ABDF5;">{</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // Code before... (A)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    mutex_lock</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #C0CAF5;">data</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #C0CAF5;">lock</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    ret </span><span style="color: #89DDFF;">=</span><span style="color: #51597D;font-style: italic;"> /* Call some function */</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    mutex_unlock</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #C0CAF5;">data</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #C0CAF5;">lock</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // Code after... (B)</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Notice that since we don’t have an enclosing scope for this operation, simply using <code>guard</code> would
+yield the following non-equivalent code, where the cleanup occurs only after the execution of the
+code B:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="c"><span class="giallo-l"><span style="color: #9ABDF5;">{</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // Code before... (A)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    guard</span><span style="color: #9ABDF5;">(</span><span style="color: #7AA2F7;">mutex</span><span style="color: #9ABDF5;">)(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #C0CAF5;">data</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #C0CAF5;">lock</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    ret </span><span style="color: #89DDFF;">=</span><span style="color: #51597D;font-style: italic;"> /* Call some function */</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // Code after... (B)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // -&gt; Only here the data-&gt;lock would be released (Cleanup)</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>If the code B requires the use of this <code>data-&gt;lock</code>, then this substitution shouldn’t be done at
+all, as it fails to release the lock prior to executing code B. Another case where this substitution
+isn’t desired is: if code B is expensive, the <code>data-&gt;lock</code> will stay in a locked state up until the
+end of B, possibly causing unnecessary stalls in other threads. One very simple way of generating
+code equivalent to the original while still using <code>guard</code> is:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="c"><span class="giallo-l"><span style="color: #9ABDF5;">{</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // Code before... (A)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    {</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">        guard</span><span style="color: #9ABDF5;">(</span><span style="color: #7AA2F7;">mutex</span><span style="color: #9ABDF5;">)(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #C0CAF5;">data</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #C0CAF5;">lock</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        ret </span><span style="color: #89DDFF;">=</span><span style="color: #51597D;font-style: italic;"> /* Call some function */</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">        // -&gt; Here data-&gt;lock would be released (Cleanup)</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // Code after... (B)</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Which, in my opinion, should be the way to go in all cases for the patterns found in <code>mlx90614.c</code>,
+it’s equivalent, readable, and only requires a very simple and localised change. On the other hand,
+I’m well aware that many programmers won’t agree with me in the creation of this additional scope
+within their code, so unfortunately we’ll have to review every mutex lock/unlock pair as separate
+cases.</p>
+<blockquote>
+<p><strong>Luiz from the future here:</strong> In fact, there exists a <code>scoped_guard</code> macro that creates a local scope
+by using a for-loop:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="c"><span class="giallo-l"><span style="color: #89DDFF;">#</span><span style="color: #BB9AF7;">define</span><span style="color: #7AA2F7;"> __scoped_guard</span><span style="color: #9ABDF5;">(</span><span style="color: #E0AF68;">_name</span><span style="color: #89DDFF;">,</span><span style="color: #E0AF68;"> _label</span><span style="color: #89DDFF;">,</span><span style="color: #E0AF68;"> args</span><span style="color: #89DDFF;">...</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">                 \</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    for</span><span style="color: #9ABDF5;"> (</span><span style="color: #7AA2F7;">CLASS</span><span style="color: #9ABDF5;">(</span><span style="color: #73DACA;">_name</span><span style="color: #89DDFF;">,</span><span style="color: #73DACA;"> scope</span><span style="color: #9ABDF5;">)(</span><span style="color: #73DACA;">args</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;                            \</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">         __guard_ptr</span><span style="color: #9ABDF5;">(</span><span style="color: #73DACA;">_name</span><span style="color: #9ABDF5;">)(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #73DACA;">scope</span><span style="color: #9ABDF5;">)</span><span style="color: #BB9AF7;"> || !</span><span style="color: #7AA2F7;">__is_cond_ptr</span><span style="color: #9ABDF5;">(</span><span style="color: #73DACA;">_name</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;  \</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">         ({</span><span style="color: #BB9AF7;"> goto</span><span style="color: #9ABDF5;"> _label</span><span style="color: #89DDFF;">;</span><span style="color: #9ABDF5;"> }))</span><span style="color: #89DDFF;">                                   \</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        if</span><span style="color: #9ABDF5;"> (</span><span style="color: #FF9E64;">0</span><span style="color: #9ABDF5;">) {</span><span style="color: #89DDFF;">                                               \</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        _label:                                                </span><span style="color: #89DDFF;">\</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">           break</span><span style="color: #89DDFF;">;                                              \</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span><span style="color: #BB9AF7;"> else</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#</span><span style="color: #BB9AF7;">define</span><span style="color: #7AA2F7;"> scoped_guard</span><span style="color: #9ABDF5;">(</span><span style="color: #E0AF68;">_name</span><span style="color: #89DDFF;">,</span><span style="color: #E0AF68;"> args</span><span style="color: #89DDFF;">...</span><span style="color: #9ABDF5;">)</span><span style="color: #7AA2F7;">  __scoped_guard</span><span style="color: #9ABDF5;">(</span><span style="color: #73DACA;">_name</span><span style="color: #89DDFF;">,</span><span style="color: #7AA2F7;"> __UNIQUE_ID</span><span style="color: #9ABDF5;">(</span><span style="color: #73DACA;">label</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">,</span><span style="color: #73DACA;"> args</span><span style="color: #9ABDF5;">)</span></span></code></pre>
+<p>In all honesty, the macro above is slightly unreadable — which is a strangely common thing in the
+Linux kernel. However this is a very useful pattern that I use for auto-restorable memory arena
+checkpoints in my codebase, and I’m glad to see it’s also used in the kernel :)</p>
+</blockquote>
+<p>For reference, the commit I’m currently on is <code>d2a4ec19d2a2e54c23b5180e939994d3da4a6b91</code> on branch
+<code>togreg</code>.</p>
+<h2 id="code-analysis">Code Analysis</h2>
+<p>Fortunately, in the case of <code>mlx90614.c</code>, the only instances where the change to <code>guard</code> could yield
+deadlocks or performance problems are those that immediately call <code>mlx90614_power_put</code>, and the
+procedure <code>mlx90614_sleep</code>, which uses locks. All other cases have very simple and small logic after
+ending the scope, allowing the change to <code>guard</code> without much hassle.</p>
+<p>Investigating <code>mlx90614_power_put</code> further, we find the following:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="c"><span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">static inline</span><span style="color: #BB9AF7;"> void</span><span style="color: #7AA2F7;"> pm_runtime_mark_last_busy</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">struct</span><span> device </span><span style="color: #89DDFF;">*</span><span style="color: #E0AF68;">dev</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    WRITE_ONCE</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">dev</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #C0CAF5;">power</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">last_busy</span><span style="color: #89DDFF;">,</span><span style="color: #7AA2F7;"> ktime_get_mono_fast_ns</span><span style="color: #9ABDF5;">())</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">static inline</span><span style="color: #BB9AF7;"> int</span><span style="color: #7AA2F7;"> __pm_runtime_put_autosuspend</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">struct</span><span> device </span><span style="color: #89DDFF;">*</span><span style="color: #E0AF68;">dev</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    return</span><span style="color: #7AA2F7;"> __pm_runtime_suspend</span><span style="color: #9ABDF5;">(</span><span style="color: #7AA2F7;">dev</span><span style="color: #89DDFF;">,</span><span style="color: #7AA2F7;"> RPM_GET_PUT </span><span style="color: #89DDFF;">|</span><span style="color: #7AA2F7;"> RPM_ASYNC </span><span style="color: #89DDFF;">|</span><span style="color: #7AA2F7;"> RPM_AUTO</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">static inline</span><span style="color: #BB9AF7;"> int</span><span style="color: #7AA2F7;"> pm_runtime_put_autosuspend</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">struct</span><span> device </span><span style="color: #89DDFF;">*</span><span style="color: #E0AF68;">dev</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    pm_runtime_mark_last_busy</span><span style="color: #9ABDF5;">(</span><span style="color: #7AA2F7;">dev</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    return</span><span style="color: #7AA2F7;"> __pm_runtime_put_autosuspend</span><span style="color: #9ABDF5;">(</span><span style="color: #7AA2F7;">dev</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">static</span><span style="color: #BB9AF7;"> void</span><span style="color: #7AA2F7;"> mlx90614_power_put</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">struct</span><span> mlx90614_data </span><span style="color: #89DDFF;">*</span><span style="color: #E0AF68;">data</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    if</span><span style="color: #9ABDF5;"> (</span><span style="color: #BB9AF7;">!</span><span style="color: #C0CAF5;">data</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #C0CAF5;">wakeup_gpio</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        return</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    pm_runtime_put_autosuspend</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #C0CAF5;">data</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #C0CAF5;">client</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #C0CAF5;">dev</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>Within <code>pm_runtime_put_autosuspend</code> we call <code>pm_runtime_mark_last_busy</code>, which will set
+<code>dev-&gt;power.last_busy</code> to the current time. The only possibly expensive call here is
+<code>__pm_runtime_suspend</code>:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="c"><span class="giallo-l"><span style="color: #BB9AF7;">int</span><span style="color: #7AA2F7;"> __pm_runtime_suspend</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">struct</span><span> device </span><span style="color: #89DDFF;">*</span><span style="color: #E0AF68;">dev</span><span style="color: #89DDFF;">,</span><span style="color: #BB9AF7;"> int</span><span style="color: #E0AF68;"> rpmflags</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    unsigned long</span><span style="color: #9ABDF5;"> flags</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    int</span><span style="color: #9ABDF5;"> retval</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    if</span><span style="color: #9ABDF5;"> (rpmflags </span><span style="color: #89DDFF;">&amp;</span><span style="color: #9ABDF5;"> RPM_GET_PUT) {</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        retval </span><span style="color: #89DDFF;">=</span><span style="color: #7AA2F7;"> rpm_drop_usage_count</span><span style="color: #9ABDF5;">(</span><span style="color: #7AA2F7;">dev</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        if</span><span style="color: #9ABDF5;"> (retval </span><span style="color: #BB9AF7;">&lt;</span><span style="color: #FF9E64;"> 0</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">            return</span><span style="color: #9ABDF5;"> retval</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span><span style="color: #BB9AF7;"> else if</span><span style="color: #9ABDF5;"> (retval </span><span style="color: #BB9AF7;">&gt;</span><span style="color: #FF9E64;"> 0</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">            trace_rpm_usage</span><span style="color: #9ABDF5;">(</span><span style="color: #7AA2F7;">dev</span><span style="color: #89DDFF;">,</span><span style="color: #7AA2F7;"> rpmflags</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">            return</span><span style="color: #FF9E64;"> 0</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        }</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    might_sleep_if</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">!</span><span style="color: #9ABDF5;">(</span><span style="color: #7AA2F7;">rpmflags </span><span style="color: #89DDFF;">&amp;</span><span style="color: #7AA2F7;"> RPM_ASYNC</span><span style="color: #9ABDF5;">)</span><span style="color: #BB9AF7;"> &amp;&amp; !</span><span style="color: #C0CAF5;">dev</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #C0CAF5;">power</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">irq_safe</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    spin_lock_irqsave</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #C0CAF5;">dev</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #C0CAF5;">power</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">lock</span><span style="color: #89DDFF;">,</span><span style="color: #7AA2F7;"> flags</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    retval </span><span style="color: #89DDFF;">=</span><span style="color: #7AA2F7;"> rpm_suspend</span><span style="color: #9ABDF5;">(</span><span style="color: #7AA2F7;">dev</span><span style="color: #89DDFF;">,</span><span style="color: #7AA2F7;"> rpmflags</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    spin_unlock_irqrestore</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #C0CAF5;">dev</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #C0CAF5;">power</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">lock</span><span style="color: #89DDFF;">,</span><span style="color: #7AA2F7;"> flags</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    return</span><span style="color: #9ABDF5;"> retval</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>We can see some sleep calls, which should put us in alert, so let’s analyse all function calls done
+within:</p>
+<ul>
+<li><code>rpm_drop_usage_count</code> manipulates <code>dev-&gt;power.usage_count</code> atomically and is very
+cheap overall.</li>
+<li><code>trace_rpm_usage</code> is compile-time generated, and produces a no-op when tracing is disabled:<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="c"><span class="giallo-l"><span style="color: #7AA2F7;">DEFINE_EVENT</span><span style="color: #9ABDF5;">(</span></span>
+<span class="giallo-l"><span>    rpm_internal</span><span style="color: #89DDFF;">,</span><span style="color: #51597D;font-style: italic;">                            // Template</span></span>
+<span class="giallo-l"><span>    rpm_usage</span><span style="color: #89DDFF;">,</span><span style="color: #51597D;font-style: italic;">                               // Name</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    TP_PROTO</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">struct</span><span> device </span><span style="color: #89DDFF;">*</span><span style="color: #E0AF68;">dev</span><span style="color: #89DDFF;">,</span><span style="color: #BB9AF7;"> int</span><span style="color: #E0AF68;"> flags</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">,</span><span style="color: #51597D;font-style: italic;"> // Procedure prototype.</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    TP_ARGS</span><span style="color: #9ABDF5;">(</span><span>dev</span><span style="color: #89DDFF;">,</span><span> flags</span><span style="color: #9ABDF5;">)</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span></code></pre>Out of curiosity, this <code>DEFINE_EVENT</code> macro eventually resolves into calling <code>__DECLARE_TRACE</code>, which
+is defined as follows:<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="c"><span class="giallo-l"><span style="color: #89DDFF;">#</span><span style="color: #BB9AF7;">define</span><span style="color: #7AA2F7;"> __DECLARE_TRACE</span><span style="color: #9ABDF5;">(</span><span style="color: #E0AF68;">name</span><span style="color: #89DDFF;">,</span><span style="color: #E0AF68;"> proto</span><span style="color: #89DDFF;">,</span><span style="color: #E0AF68;"> args</span><span style="color: #89DDFF;">,</span><span style="color: #E0AF68;"> cond</span><span style="color: #89DDFF;">,</span><span style="color: #E0AF68;"> data_proto</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">                    \</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">  __DECLARE_TRACE_COMMON</span><span style="color: #9ABDF5;">(</span><span style="color: #73DACA;">name</span><span style="color: #89DDFF;">,</span><span style="color: #7AA2F7;"> PARAMS</span><span style="color: #9ABDF5;">(</span><span style="color: #73DACA;">proto</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">,</span><span style="color: #7AA2F7;"> PARAMS</span><span style="color: #9ABDF5;">(</span><span style="color: #73DACA;">args</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">,</span><span style="color: #7AA2F7;"> PARAMS</span><span style="color: #9ABDF5;">(</span><span style="color: #73DACA;">data_proto</span><span style="color: #9ABDF5;">))</span><span style="color: #89DDFF;"> \</span></span>
+<span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">  static inline</span><span style="color: #BB9AF7;"> void</span><span style="color: #73DACA;"> __do_trace_##</span><span style="color: #7AA2F7;">name</span><span style="color: #9ABDF5;">(</span><span style="color: #73DACA;">proto</span><span style="color: #9ABDF5;">) {</span><span style="color: #89DDFF;">                                 \</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">      TRACEPOINT_CHECK</span><span style="color: #9ABDF5;">(name)</span><span style="color: #89DDFF;">                                                    \</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      if</span><span style="color: #9ABDF5;"> (cond) {</span><span style="color: #89DDFF;">                                                               \</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">          guard</span><span style="color: #9ABDF5;">(srcu_fast_notrace)(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #9ABDF5;">tracepoint_srcu)</span><span style="color: #89DDFF;">;                           \</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">          __DO_TRACE_CALL</span><span style="color: #9ABDF5;">(name</span><span style="color: #89DDFF;">,</span><span style="color: #7AA2F7;"> TP_ARGS</span><span style="color: #9ABDF5;">(args))</span><span style="color: #89DDFF;">;                                 \</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span><span style="color: #89DDFF;">                                                                         \</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span><span style="color: #89DDFF;">                                                                             \</span></span>
+<span class="giallo-l"><span style="color: #9D7CD8;font-style: italic;">  static inline</span><span style="color: #BB9AF7;"> void</span><span style="color: #73DACA;"> trace_##</span><span style="color: #7AA2F7;">name</span><span style="color: #9ABDF5;">(</span><span style="color: #73DACA;">proto</span><span style="color: #9ABDF5;">) {</span><span style="color: #89DDFF;">                                      \</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      if</span><span style="color: #9ABDF5;"> (</span><span style="color: #7AA2F7;">static_branch_unlikely</span><span style="color: #9ABDF5;">(</span><span style="color: #89DDFF;">&amp;</span><span style="color: #9ABDF5;">__tracepoint_##</span><span style="color: #C0CAF5;">name</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">key</span><span style="color: #9ABDF5;">)) {</span><span style="color: #89DDFF;">                   \</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">          __do_trace_##</span><span style="color: #7AA2F7;">name</span><span style="color: #9ABDF5;">(args)</span><span style="color: #89DDFF;">;                                              \</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span><span style="color: #89DDFF;">                                                                         \</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">      if</span><span style="color: #9ABDF5;"> (</span><span style="color: #7AA2F7;">IS_ENABLED</span><span style="color: #9ABDF5;">(CONFIG_LOCKDEP)</span><span style="color: #BB9AF7;"> &amp;&amp;</span><span style="color: #9ABDF5;"> (cond)) {</span><span style="color: #89DDFF;">                               \</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">          WARN_ONCE</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">!</span><span style="color: #7AA2F7;">rcu_is_watching</span><span style="color: #9ABDF5;">()</span><span style="color: #89DDFF;">, &quot;</span><span style="color: #9ECE6A;">RCU not watching for tracepoint</span><span style="color: #89DDFF;">&quot;</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;     \</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">      }</span><span style="color: #89DDFF;">                                                                         \</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">  }</span></span></code></pre>Upon further inspection, the produced functions are relatively cheap and won’t cause us much
+trouble.</li>
+<li><code>might_sleep_if</code> will never result in a sleep since the <code>__pm_runtime_suspend</code> is called with the
+<code>RPM_ASYNC</code> enabled in <code>rpmflags</code>.</li>
+<li><code>rpm_suspend</code> is a pretty big function, however, due to our static <code>rpmflags</code> being <code>RPM_ASYNC | RPM_AUTO</code>,
+we can deduce that the procedure will simply schedule a suspend event to a separate worker thread <code>pm_wq</code>.</li>
+</ul>
+<h3 id="summarising">Summarising</h3>
+<p>In order to summarise the discussion above and concisely explain why the changes do not pose any
+problems to the codebase, I made this git commit:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="plain"><span class="giallo-l"><span>iio: temperature: mlx90614: use guard(mutex) for EEPROM access locking</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>Replace mutex_lock()/mutex_unlock() pairs with guard(mutex) from</span></span>
+<span class="giallo-l"><span>cleanup.h for cleaner and safer mutex handling. The lock protects</span></span>
+<span class="giallo-l"><span>EEPROM access across five call sites in mlx90614_read_raw(),</span></span>
+<span class="giallo-l"><span>mlx90614_write_raw(), and mlx90614_sleep().</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>In all cases, the code between mutex_unlock() and the end of scope</span></span>
+<span class="giallo-l"><span>is either trivial computation, a return statement, or a call to</span></span>
+<span class="giallo-l"><span>mlx90614_power_put() (which only schedules a deferred autosuspend</span></span>
+<span class="giallo-l"><span>via pm_runtime_put_autosuspend()). The slightly extended lock scope</span></span>
+<span class="giallo-l"><span>is negligible compared to the existing hold times, which include</span></span>
+<span class="giallo-l"><span>EEPROM write cycles with 40ms sleeps.</span></span></code></pre>
+<p>Whose corresponding patch looks like this:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="diff"><span class="giallo-l"><span>diff --git a/drivers/iio/temperature/mlx90614.c b/drivers/iio/temperature/mlx90614.c</span></span>
+<span class="giallo-l"><span>index 1ad21b73e1b4..27464e4cc286 100644</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">---</span><span> a/drivers/iio/temperature/mlx90614.c</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+++</span><span> b/drivers/iio/temperature/mlx90614.c</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">@@</span><span> -23,6 +23,7</span><span style="color: #89DDFF;"> @@</span></span>
+<span class="giallo-l"><span>  */</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span> #include &lt;linux/bitfield.h&gt;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">#include &lt;linux/cleanup.h&gt;</span></span>
+<span class="giallo-l"><span> #include &lt;linux/delay.h&gt;</span></span>
+<span class="giallo-l"><span> #include &lt;linux/err.h&gt;</span></span>
+<span class="giallo-l"><span> #include &lt;linux/gpio/consumer.h&gt;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">@@</span><span> -296,10 +297,9</span><span style="color: #89DDFF;"> @@</span><span> static int mlx90614_read_raw(struct iio_dev *indio_dev,</span></span>
+<span class="giallo-l"><span>        if (ret &lt; 0)</span></span>
+<span class="giallo-l"><span>            return ret;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_lock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">       guard(mutex)(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span>        ret = i2c_smbus_read_word_data(data-&gt;client,</span></span>
+<span class="giallo-l"><span>                           chip_info-&gt;op_eeprom_emissivity);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_unlock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span>        mlx90614_power_put(data);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>        if (ret &lt; 0)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">@@</span><span> -319,10 +319,9</span><span style="color: #89DDFF;"> @@</span><span> static int mlx90614_read_raw(struct iio_dev *indio_dev,</span></span>
+<span class="giallo-l"><span>        if (ret &lt; 0)</span></span>
+<span class="giallo-l"><span>            return ret;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_lock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">       guard(mutex)(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span>        ret = i2c_smbus_read_word_data(data-&gt;client,</span></span>
+<span class="giallo-l"><span>                           chip_info-&gt;op_eeprom_config1);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_unlock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span>        mlx90614_power_put(data);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>        if (ret &lt; 0)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">@@</span><span> -358,10 +357,9</span><span style="color: #89DDFF;"> @@</span><span> static int mlx90614_write_raw(struct iio_dev *indio_dev,</span></span>
+<span class="giallo-l"><span>        if (ret &lt; 0)</span></span>
+<span class="giallo-l"><span>            return ret;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_lock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">       guard(mutex)(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span>        ret = mlx90614_write_word(data-&gt;client,</span></span>
+<span class="giallo-l"><span>                      chip_info-&gt;op_eeprom_emissivity, val);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_unlock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span>        mlx90614_power_put(data);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>        return ret;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">@@</span><span> -373,10 +371,9</span><span style="color: #89DDFF;"> @@</span><span> static int mlx90614_write_raw(struct iio_dev *indio_dev,</span></span>
+<span class="giallo-l"><span>        if (ret &lt; 0)</span></span>
+<span class="giallo-l"><span>            return ret;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_lock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">       guard(mutex)(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span>        ret = mlx90614_iir_search(data-&gt;client,</span></span>
+<span class="giallo-l"><span>                      val * 100 + val2 / 10000);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_unlock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span>        mlx90614_power_put(data);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>        return ret;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">@@</span><span> -476,12 +473,11</span><span style="color: #89DDFF;"> @@</span><span> static int mlx90614_sleep(struct mlx90614_data *data)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    dev_dbg(&amp;data-&gt;client-&gt;dev, &quot;Requesting sleep&quot;);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">   mutex_lock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">   guard(mutex)(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span>    ret = i2c_smbus_xfer(data-&gt;client-&gt;adapter, data-&gt;client-&gt;addr,</span></span>
+<span class="giallo-l"><span>                 data-&gt;client-&gt;flags | I2C_CLIENT_PEC,</span></span>
+<span class="giallo-l"><span>                 I2C_SMBUS_WRITE, chip_info-&gt;op_sleep,</span></span>
+<span class="giallo-l"><span>                 I2C_SMBUS_BYTE, NULL);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">   mutex_unlock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    return ret;</span></span>
+<span class="giallo-l"><span> }</span></span></code></pre>
+<hr />
+<p>The maintainers requested changes to be made with regard to the scoping of the guards, pointing out
+that <code>scoped_guard</code> could be used and avoid any of my previous cost analyses.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="diff"><span class="giallo-l"><span> drivers/iio/temperature/mlx90614.c | 37 ++++++++++++++----------------</span></span>
+<span class="giallo-l"><span> 1 file changed, 17 insertions(+), 20 deletions(-)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>diff --git a/drivers/iio/temperature/mlx90614.c b/drivers/iio/temperature/mlx90614.c</span></span>
+<span class="giallo-l"><span>index 1ad21b73e..6c58375de 100644</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">---</span><span> a/drivers/iio/temperature/mlx90614.c</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+++</span><span> b/drivers/iio/temperature/mlx90614.c</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">@@</span><span> -23,6 +23,7</span><span style="color: #89DDFF;"> @@</span></span>
+<span class="giallo-l"><span>  */</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span> #include &lt;linux/bitfield.h&gt;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">#include &lt;linux/cleanup.h&gt;</span></span>
+<span class="giallo-l"><span> #include &lt;linux/delay.h&gt;</span></span>
+<span class="giallo-l"><span> #include &lt;linux/err.h&gt;</span></span>
+<span class="giallo-l"><span> #include &lt;linux/gpio/consumer.h&gt;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">@@</span><span> -139,6 +140,7</span><span style="color: #89DDFF;"> @@</span><span> static s32 mlx90614_write_word(const struct i2c_client *client, u8 command,</span></span>
+<span class="giallo-l"><span>    return ret;</span></span>
+<span class="giallo-l"><span> }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span></span>
+<span class="giallo-l"><span> /*</span></span>
+<span class="giallo-l"><span>  * Find the IIR value inside iir_values array and return its position</span></span>
+<span class="giallo-l"><span>  * which is equivalent to the bit value in sensor register</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">@@</span><span> -296,10 +298,10</span><span style="color: #89DDFF;"> @@</span><span> static int mlx90614_read_raw(struct iio_dev *indio_dev,</span></span>
+<span class="giallo-l"><span>        if (ret &lt; 0)</span></span>
+<span class="giallo-l"><span>            return ret;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_lock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       ret = i2c_smbus_read_word_data(data-&gt;client,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">                          chip_info-&gt;op_eeprom_emissivity);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_unlock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">       scoped_guard(mutex, &amp;data-&gt;lock)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">           ret = i2c_smbus_read_word_data(data-&gt;client,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">                   chip_info-&gt;op_eeprom_emissivity);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span></span>
+<span class="giallo-l"><span>        mlx90614_power_put(data);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>        if (ret &lt; 0)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">@@</span><span> -319,10 +321,10</span><span style="color: #89DDFF;"> @@</span><span> static int mlx90614_read_raw(struct iio_dev *indio_dev,</span></span>
+<span class="giallo-l"><span>        if (ret &lt; 0)</span></span>
+<span class="giallo-l"><span>            return ret;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_lock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       ret = i2c_smbus_read_word_data(data-&gt;client,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">                          chip_info-&gt;op_eeprom_config1);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_unlock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">       scoped_guard(mutex, &amp;data-&gt;lock)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">           ret = i2c_smbus_read_word_data(data-&gt;client,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">                   chip_info-&gt;op_eeprom_config1);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span></span>
+<span class="giallo-l"><span>        mlx90614_power_put(data);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>        if (ret &lt; 0)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">@@</span><span> -358,10 +360,10</span><span style="color: #89DDFF;"> @@</span><span> static int mlx90614_write_raw(struct iio_dev *indio_dev,</span></span>
+<span class="giallo-l"><span>        if (ret &lt; 0)</span></span>
+<span class="giallo-l"><span>            return ret;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_lock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       ret = mlx90614_write_word(data-&gt;client,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">       scoped_guard(mutex, &amp;data-&gt;lock)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">           ret = mlx90614_write_word(data-&gt;client,</span></span>
+<span class="giallo-l"><span>                      chip_info-&gt;op_eeprom_emissivity, val);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_unlock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span></span>
+<span class="giallo-l"><span>        mlx90614_power_put(data);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>        return ret;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">@@</span><span> -373,10 +375,9</span><span style="color: #89DDFF;"> @@</span><span> static int mlx90614_write_raw(struct iio_dev *indio_dev,</span></span>
+<span class="giallo-l"><span>        if (ret &lt; 0)</span></span>
+<span class="giallo-l"><span>            return ret;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_lock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       ret = mlx90614_iir_search(data-&gt;client,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">       scoped_guard(mutex, &amp;data-&gt;lock)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">           ret = mlx90614_iir_search(data-&gt;client,</span></span>
+<span class="giallo-l"><span>                      val * 100 + val2 / 10000);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">       mutex_unlock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span>        mlx90614_power_put(data);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>        return ret;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">@@</span><span> -467,7 +468,6</span><span style="color: #89DDFF;"> @@</span><span> static const struct iio_info mlx90614_info = {</span></span>
+<span class="giallo-l"><span> static int mlx90614_sleep(struct mlx90614_data *data)</span></span>
+<span class="giallo-l"><span> {</span></span>
+<span class="giallo-l"><span>    const struct mlx_chip_info *chip_info = data-&gt;chip_info;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">   s32 ret;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    if (!data-&gt;wakeup_gpio) {</span></span>
+<span class="giallo-l"><span>        dev_dbg(&amp;data-&gt;client-&gt;dev, &quot;Sleep disabled&quot;);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">@@</span><span> -476,14 +476,11</span><span style="color: #89DDFF;"> @@</span><span> static int mlx90614_sleep(struct mlx90614_data *data)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    dev_dbg(&amp;data-&gt;client-&gt;dev, &quot;Requesting sleep&quot;);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">   mutex_lock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">   ret = i2c_smbus_xfer(data-&gt;client-&gt;adapter, data-&gt;client-&gt;addr,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">   guard(mutex)(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">+</span><span style="color: #449DAB;">   return i2c_smbus_xfer(data-&gt;client-&gt;adapter, data-&gt;client-&gt;addr,</span></span>
+<span class="giallo-l"><span>                 data-&gt;client-&gt;flags | I2C_CLIENT_PEC,</span></span>
+<span class="giallo-l"><span>                 I2C_SMBUS_WRITE, chip_info-&gt;op_sleep,</span></span>
+<span class="giallo-l"><span>                 I2C_SMBUS_BYTE, NULL);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">   mutex_unlock(&amp;data-&gt;lock);</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">-</span><span style="color: #914C54;">   return ret;</span></span>
+<span class="giallo-l"><span> }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span> static int mlx90614_wakeup(struct mlx90614_data *data)</span></span></code></pre>
+<hr />
+<p>Unfortunately, the patch was not accepted and the change was ruled “not worth it” for the merge,
+without much explanation why.</p>
+
+  </div>
+  
+  <nav class="post-pager" aria-label="More posts">
+    <a class="post-pager__prev" rel="prev" href="https://operad.dev/memory-management/">&larr; Practical Memory Management</a>
+    <a class="post-pager__next" rel="next" href="https://operad.dev/patch-hub-apply/">Contributing to patch-hub: Linux Kernel Development Workflow in the Terminal &rarr;</a>
+  </nav>
+  
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <div class="container site-footer__inner">
+    <p>
+      &copy; 2026 Luiz Mugnaini
+      &middot; <a href="https://operad.dev/atom.xml">feed</a>
+      &middot; <a href="https://git.sr.ht/~luizmugnaini" rel="noopener">code</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

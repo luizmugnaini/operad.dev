@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <meta name="theme-color" content="#faf6ee" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14141a" media="(prefers-color-scheme: dark)">
+
+  <title>Practical Memory Management — operad.dev</title>
+
+  <meta name="description" content="Memory management strategies">
+  <meta name="author" content="Luiz Mugnaini">
+
+  <link rel="canonical" href="https://operad.dev/memory-management/">
+
+  
+  <meta property="og:title" content="Practical Memory Management">
+  <meta property="og:description" content="Memory management strategies">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://operad.dev/memory-management/">
+  <meta property="og:site_name" content="operad.dev">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:image" content="https://operad.dev/favicon_letter-512x512.png">
+
+  <link rel="stylesheet" href="https://operad.dev/main.css?h=bec186606d61b1230339">
+
+  <link rel="alternate" type="application/atom+xml" href="https://operad.dev/atom.xml" title="operad.dev">
+
+  <link rel="icon" type="image/png" href="/favicon_knot-192x192.png">
+
+  
+
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Practical Memory Management",
+    "description": "Memory management strategies",
+    "datePublished": "2024-11-25",
+    "dateModified": "2024-11-25",
+    "author": { "@type": "Person", "name": "Luiz Mugnaini" },
+    "publisher": { "@type": "Person", "name": "Luiz Mugnaini" },
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://operad.dev/memory-management/" },
+    "image": "https://operad.dev/favicon_letter-512x512.png"
+  }
+  </script>
+</head>
+
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+  <div class="container site-header__inner">
+    <a class="wordmark" href="https://operad.dev">
+      <img class="wordmark__icon" src="/favicon_knot-192x192.png" alt="" width="20" height="20">
+      operad.dev
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul><li><a href="https://operad.dev/">notes</a></li><li><a href="https://operad.dev/about/">about</a></li><li><a href="https://operad.dev/work/">work</a></li><li><a href="https://git.sr.ht/~luizmugnaini" target="_blank" rel="noopener noreferrer">code</a></li><li><a href="https://operad.dev/links/">links</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+  <main id="main" class="container content">
+    
+<article class="post">
+  <header class="post-header">
+    <h1 class="post-title">Practical Memory Management</h1>
+    
+<div class="post-meta">
+  <time datetime="2024-11-25">2024-11-25</time>
+  <span class="post-meta__tags">
+    <a class="tag" href="https://operad.dev/tags/programming/">#programming</a>
+  </span>
+</div>
+
+  </header>
+  <div class="prose">
+    <p>This post covers custom memory allocator strategies — arenas and stack allocators — that eliminate
+most common memory management problems in C and C++. The snippets shown here are simplified for
+clarity, drawn from a production codebase I work on that has to deal with real-time constraints.</p>
+<p>I need to make some things clear from the start:</p>
+<ul>
+<li>None of what I’ll be talking about is new. Many large codebases adopt this exact memory-management
+design from the ground up.</li>
+<li>My only goal here is to make this folk knowledge available to anyone looking to incorporate these
+strategies.</li>
+</ul>
+<p>Over the last few years, C has been widely criticised for being memory unsafe — it lacks compiler
+constraints for object lifetime and ownership semantics that newer languages provide. Although that’s
+true, you can still build different allocation strategies that will deal with most of these memory
+issues for free. We’ll provide memory safety through deliberate design rather than language-level
+enforcement. Most importantly, it doesn’t have to be painful! The memory allocators I’ll present are
+extremely easy to implement and manage. Rather than adding more complexity to your codebase, you’ll
+be simplifying it. The cost of such approaches comes through discipline, and may change the way you
+handle problems in favour of batched processing, which is almost always a good thing to do.</p>
+<h1 id="building-your-own-memory-system">Building your own memory system</h1>
+<p>When writing any API, one should consider the scope and the audience of the API. In the case of a
+memory management system, the main concern is centred on memory safety. How many safety guard-rails
+should we build?</p>
+<p>Guard-rails obviously come with their own performance costs. For instance, if we wanted a very
+robust system that disallows any use-after-free, we wouldn’t be returning direct pointers to the
+memory to our users. To deal with that, we could use handles and manage their coherence internally
+(check <a rel="external" href="https://floooh.github.io/2018/06/17/handles-vs-pointers.html">this post</a>, by Andre
+Weissflog, for more information). This would require every allocation to have a unique ID, every
+read request to be checked if IDs match, etc.</p>
+<p>In the majority of cases, my applications have strict requirements for real-time performance —
+adding a new layer of indirection is not an option. In order to meet these requirements we have to
+make a compromise: procedures establish protocols between the caller and callee, and correctness is
+upheld by convention rather than enforced at runtime. The allocator won’t validate that you’re using
+it correctly — that responsibility falls on the programmer. This is a deliberate trade-off: we give
+up runtime safety checks in exchange for predictable, minimal-overhead memory operations. On the
+other hand, of course you can always write validation checks that are enabled only in debug mode —
+in fact, this is a common practice in our codebase, all protocols are established as code blocks
+that assert all assumptions that the function makes when dealing with the input.</p>
+<p>One warning regarding the allocators presented in this post: they are <strong>not</strong> implemented to be
+thread-safe. You can obviously implement a thread-safe version easily, however I prefer using these
+allocators in a per-thread basis rather than cross-threads — which avoids contentions, race
+conditions, and memory sync issues.</p>
+<h1 id="alignment-rules-for-memory-reads">Alignment: rules for memory reads</h1>
+<p>The CPU memory reads cannot be done willy nilly at any given address. Modern architectures are
+optimised to read contiguous memory with a certain alignment — which makes stepping through memory a
+regular task (as opposed to jumping around randomly). This alignment is always a power of two and
+depends on the size of the memory units (e.g. a struct member) we want to read. In C++ you can query
+the memory alignment for a given type <code>T</code> using <code>alignof(T)</code> (in C, you can use <code>_Alignof(T)</code>).</p>
+<p>For instance, if we have an array of floats (each float with a size of 4 bytes), the address of the
+<code>n</code>th element of the array in memory should be of the form <code>4 n + c</code> where <code>c</code> is the address of the
+first element of the array. Hence we say that the alignment of a float is 4 bytes.</p>
+<p>For structs, the compiler may need to add paddings in order to satisfy alignment conditions. A lost
+art in programming is the arrangement of struct members for optimal alignment. Let’s see this in
+practice.</p>
+<p>Suppose I have a struct <code>Foo</code> that has the following memory layout:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="cpp"><span class="giallo-l"><span style="color: #BB9AF7;">struct</span><span style="color: #C0CAF5;"> Foo</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uint8_t</span><span style="color: #89DDFF;"> *</span><span style="color: #9ABDF5;">memory</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uint32_t</span><span style="color: #9ABDF5;"> allocation_count</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    double</span><span style="color: #9ABDF5;">   some_metric</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    float</span><span style="color: #9ABDF5;">    some_other_metric</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span><span style="color: #89DDFF;">;</span></span></code></pre>
+<p>From the point of view of the compiler, the actual memory layout of <code>Foo</code> has to make sure that the
+alignment of each struct member is valid. Thus in reality, the arrangement of bytes composing
+<code>Foo</code> is laid as follows:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="cpp"><span class="giallo-l"><span style="color: #BB9AF7;">struct</span><span style="color: #C0CAF5;"> Foo</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uint8_t</span><span style="color: #89DDFF;"> *</span><span style="color: #9ABDF5;">memory</span><span style="color: #89DDFF;">;</span><span style="color: #51597D;font-style: italic;">             // 8 bytes.</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uint32_t</span><span style="color: #9ABDF5;"> allocation_count</span><span style="color: #89DDFF;">;</span><span style="color: #51597D;font-style: italic;">   // 4 bytes.</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uint8_t</span><span style="color: #C0CAF5;">  padding1</span><span style="color: #9ABDF5;">[</span><span style="color: #FF9E64;">4</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">;</span><span style="color: #51597D;font-style: italic;">        // Inserted padding of 4 bytes.</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    double</span><span style="color: #9ABDF5;">   some_metric</span><span style="color: #89DDFF;">;</span><span style="color: #51597D;font-style: italic;">        // 8 bytes.</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    float</span><span style="color: #9ABDF5;">    some_other_metric</span><span style="color: #89DDFF;">;</span><span style="color: #51597D;font-style: italic;">  // 4 bytes.</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uint8_t</span><span style="color: #C0CAF5;">  padding2</span><span style="color: #9ABDF5;">[</span><span style="color: #FF9E64;">4</span><span style="color: #9ABDF5;">]</span><span style="color: #89DDFF;">;</span><span style="color: #51597D;font-style: italic;">        // Inserted padding of 4 bytes.</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span><span style="color: #89DDFF;">;</span></span></code></pre>
+<p>Notice how we’re wasting 8 bytes of memory for each instance of our struct.</p>
+<p>But really, why does the compiler insert padding between struct members? Most modern CPU
+architectures require data to be aligned according to its size. Misaligned access can lead to
+performance penalties on some platforms (like x86), and in other cases it can even cause hardware
+exceptions to be thrown.</p>
+<p>One thing I didn’t explain is why the compiler has to put those 4 bytes of padding after the last
+structure member. If for some reason you have a contiguous array of <code>Foo</code> instances, in order to
+traverse through the array we would use the alignment of <code>Foo</code> (8 bytes) — and if it wasn’t for
+those last 4 bytes, the address of the next <code>Foo</code> instance would be misaligned! Once again, the
+compiler has to account for the worst case scenario.</p>
+<p>Fixing our bad memory usage is simple, we just rearrange the members taking into account their
+sizes:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="cpp"><span class="giallo-l"><span style="color: #BB9AF7;">struct</span><span style="color: #C0CAF5;"> Foo</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uint8_t</span><span style="color: #89DDFF;"> *</span><span style="color: #9ABDF5;">memory</span><span style="color: #89DDFF;">;</span><span style="color: #51597D;font-style: italic;">             // 8 bytes.</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    double</span><span style="color: #9ABDF5;">   some_metric</span><span style="color: #89DDFF;">;</span><span style="color: #51597D;font-style: italic;">        // 8 bytes.</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uint32_t</span><span style="color: #9ABDF5;"> allocation_count</span><span style="color: #89DDFF;">;</span><span style="color: #51597D;font-style: italic;">   // 4 bytes.</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    float</span><span style="color: #9ABDF5;">    some_other_metric</span><span style="color: #89DDFF;">;</span><span style="color: #51597D;font-style: italic;">  // 4 bytes.</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span><span style="color: #89DDFF;">;</span></span></code></pre>
+<p>Analogously, every time we allocate memory in our custom allocators we’ll have to make sure to
+account for the necessary alignment restrictions.</p>
+<h1 id="arena-allocator">Arena Allocator</h1>
+<p>The simplest allocator — yet sufficient for almost all use-cases — is the <em>arena memory allocator</em>.
+Its construction is ridiculously simple: a pointer to the block of memory being managed, the total
+maximum capacity of the block, and an offset relative to the start of the block to the free
+space:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="cpp"><span class="giallo-l"><span style="color: #BB9AF7;">struct</span><span style="color: #C0CAF5;"> Arena</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uint8_t</span><span style="color: #89DDFF;"> *</span><span style="color: #9ABDF5;">buffer</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span style="color: #9ABDF5;">   capacity</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span style="color: #9ABDF5;">   offset</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span><span style="color: #89DDFF;">;</span></span></code></pre>
+<p>Having only this amount of information to deal with, the arena can only be used to accumulate
+allocations for a certain period and then free all of the allocated memory at once. This constraint
+is perfect for modelling the concept of a lifetime: objects allocated in the same arena, have a
+common lifetime end — that is, when the arena has its offset reset. This allows one to trivially
+deal with lifetime issues that languages like Rust enforce at the compiler level.</p>
+<p>It is to be noted that your style of programming with arenas may differ from the typical programming
+you see out there. It is common to see programs where ownership of memory isn’t strictly defined in
+the course of the program execution. For this exact reason, modern C++ codebases often use
+<code>shared_ptr</code> and reference counting — besides the overhead, this approach makes reasoning about
+lifetimes harder, not easier.</p>
+<p>When programming with arenas, one commonly thinks in groups of allocations (hence lifetime groups),
+and chunks of objects. Work is mainly done with these chunks in mind, improving cache spatial and
+temporal locality. This way of programming is sometimes called “data-oriented programming” — it aligns with how
+memory hierarchies are designed to be used.</p>
+<p>Many problems that arise from object-level memory management are eliminated when you
+design your program with memory arenas in mind. For instance, ownership and lifetime problems are
+almost a non-issue and an easy-to-solve problem.</p>
+<h2 id="allocating-memory-blocks">Allocating memory blocks</h2>
+<p>When allocating a new block of memory in the arena, we have to account for the alignment of the
+structure or array that will be allocated. By the simplicity of the arena, computing the next
+address that satisfies the required alignment is a pretty simple task:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="cpp"><span class="giallo-l"><span style="color: #BB9AF7;">uintptr_t</span><span style="color: #7AA2F7;"> align_forward</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">uintptr_t</span><span style="color: #E0AF68;"> ptr_addr</span><span style="color: #89DDFF;">,</span><span style="color: #BB9AF7;"> size_t</span><span style="color: #E0AF68;"> alignment</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uintptr_t</span><span> mod_align </span><span style="color: #89DDFF;">=</span><span> ptr_addr </span><span style="color: #BB9AF7;">&amp;</span><span style="color: #9ABDF5;"> (</span><span>alignment </span><span style="color: #89DDFF;">-</span><span style="color: #FF9E64;"> 1</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span><span style="color: #51597D;font-style: italic;"> // Same as `ptr_addr % alignment`</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    if</span><span style="color: #9ABDF5;"> (</span><span>mod_align </span><span style="color: #BB9AF7;">!=</span><span style="color: #FF9E64;"> 0</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        ptr_addr </span><span style="color: #89DDFF;">+=</span><span style="color: #9ABDF5;"> alignment </span><span style="color: #89DDFF;">-</span><span style="color: #9ABDF5;"> mod_align</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;font-style: italic;">    return</span><span> ptr_addr</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>where the parameter <code>alignment</code> is assumed to be a power of two.</p>
+<p>Having this auxiliary function at hand, making a new allocation can be very easily done:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="cpp"><span class="giallo-l"><span style="color: #BB9AF7;">uint8_t</span><span style="color: #9D7CD8;font-style: italic;"> *</span><span style="color: #7AA2F7;">arena_alloc_align</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">Arena</span><span style="color: #9D7CD8;font-style: italic;"> *</span><span style="color: #E0AF68;">arena</span><span style="color: #89DDFF;">,</span><span style="color: #BB9AF7;"> size_t</span><span style="color: #E0AF68;"> size_bytes</span><span style="color: #89DDFF;">,</span><span style="color: #BB9AF7;"> size_t</span><span style="color: #E0AF68;"> alignment</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    if</span><span style="color: #9ABDF5;"> (</span><span>arena </span><span style="color: #BB9AF7;">==</span><span style="color: #FF9E64;"> nullptr</span><span style="color: #BB9AF7;"> ||</span><span style="color: #C0CAF5;"> arena</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">capacity</span><span style="color: #BB9AF7;"> ==</span><span style="color: #FF9E64;"> 0</span><span style="color: #BB9AF7;"> ||</span><span> size_bytes </span><span style="color: #BB9AF7;">==</span><span style="color: #FF9E64;"> 0</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;font-style: italic;">        return</span><span style="color: #FF9E64;"> nullptr</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uintptr_t</span><span> memory_addr    </span><span style="color: #89DDFF;">=</span><span style="color: #9ABDF5;"> (</span><span style="color: #BB9AF7;">uintptr_t</span><span style="color: #9ABDF5;">)</span><span style="color: #C0CAF5;">arena</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">buffer</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uintptr_t</span><span> new_block_addr </span><span style="color: #89DDFF;">=</span><span style="color: #7AA2F7;"> align_forward</span><span style="color: #9ABDF5;">(</span><span>memory_addr </span><span style="color: #89DDFF;">+</span><span style="color: #C0CAF5;"> arena</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">offset</span><span style="color: #89DDFF;">,</span><span> alignment</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    if</span><span style="color: #9ABDF5;"> (</span><span>new_block_addr </span><span style="color: #89DDFF;">+</span><span> size_bytes </span><span style="color: #BB9AF7;">&gt;</span><span style="color: #C0CAF5;"> arena</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">capacity</span><span style="color: #89DDFF;"> +</span><span> memory_addr</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">        // Not enough free memory.</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;font-style: italic;">        return</span><span style="color: #FF9E64;"> nullptr</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // Commit the new block of memory.</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    arena</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">offset</span><span style="color: #89DDFF;"> =</span><span style="color: #9ABDF5;"> (</span><span style="color: #BB9AF7;">size_t</span><span style="color: #9ABDF5;">)(</span><span>size_bytes </span><span style="color: #89DDFF;">+</span><span> new_block_addr </span><span style="color: #89DDFF;">-</span><span> memory_addr</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uint8_t</span><span style="color: #89DDFF;"> *</span><span>new_block </span><span style="color: #89DDFF;">=</span><span style="color: #9ABDF5;"> (</span><span style="color: #BB9AF7;">uint8_t</span><span style="color: #89DDFF;"> *</span><span style="color: #9ABDF5;">)</span><span>new_block_addr</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;font-style: italic;">    return</span><span> new_block</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>You should also create procedures that deal with the following operations: clearing the arena,
+resizing an already allocated block of memory, etc.</p>
+<h2 id="temporary-allocations-with-checkpoints">Temporary allocations with checkpoints</h2>
+<p>Having the constraint of only being able to free all memory at once can be a bad restriction once
+you want to perform temporary computations that shouldn’t be sticking around in the allocator. In
+order to overcome this constraint, we can create a checkpoint system that records the current state of
+the arena and is capable of restoring the allocator once the memory allocated from the checkpoint
+onwards isn’t needed anymore. This amounts to a simple implementation like the following:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="cpp"><span class="giallo-l"><span style="color: #BB9AF7;">struct</span><span style="color: #C0CAF5;"> ArenaCheckpoint</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    Arena </span><span style="color: #89DDFF;">*</span><span style="color: #9ABDF5;">arena</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span style="color: #9ABDF5;"> saved_offset</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">ArenaCheckpoint</span><span style="color: #7AA2F7;"> arena_make_checkpoint</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">Arena</span><span style="color: #9D7CD8;font-style: italic;"> *</span><span style="color: #E0AF68;">arena</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;font-style: italic;">    return</span><span> ArenaCheckpoint</span><span style="color: #9ABDF5;">{arena</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> arena</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">offset</span><span style="color: #9ABDF5;">}</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">void</span><span style="color: #7AA2F7;"> arena_restore_checkpoint</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">ArenaCheckpoint</span><span style="color: #E0AF68;"> checkpoint</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    checkpoint</span><span style="color: #89DDFF;">.</span><span style="color: #C0CAF5;">arena</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">offset</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> checkpoint</span><span style="color: #89DDFF;">.</span><span style="color: #7DCFFF;">saved_offset</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>You can certainly extend the behaviour of checkpoints. For instance, you can create a kind of
+auto-restoring checkpoint with the use of destructors if you are into that.</p>
+<p>Although extremely simple, checkpoints are one of the most useful constructs you can build on top of
+an arena allocator. Here I’ll list two patterns that I use all of the time:</p>
+<ul>
+<li>
+<p><strong>Temporary work.</strong> Sometimes, in order to make some computation, you may require dynamic allocation:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="cpp"><span class="giallo-l"><span style="color: #C0CAF5;">ComputeResult</span><span style="color: #7AA2F7;"> compute_foo</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">Bar</span><span style="color: #9D7CD8;font-style: italic;"> *</span><span style="color: #E0AF68;">bar</span><span style="color: #89DDFF;">,</span><span style="color: #BB9AF7;"> int</span><span style="color: #E0AF68;"> bar_count</span><span style="color: #89DDFF;">,</span><span style="color: #C0CAF5;"> Arena</span><span style="color: #9D7CD8;font-style: italic;"> *</span><span style="color: #E0AF68;">work_arena</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span>    ArenaCheckpoint work_checkpoint </span><span style="color: #89DDFF;">=</span><span style="color: #7AA2F7;"> arena_make_checkpoint</span><span style="color: #9ABDF5;">(</span><span>work_arena</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // `foobar` is used temporarily to compute `result`.</span></span>
+<span class="giallo-l"><span>    Array</span><span style="color: #BB9AF7;">&lt;int&gt;</span><span> foobar </span><span style="color: #89DDFF;">=</span><span style="color: #7AA2F7;"> array_make</span><span style="color: #9ABDF5;">&lt;</span><span style="color: #BB9AF7;">int</span><span style="color: #9ABDF5;">&gt;(</span><span>work_arena</span><span style="color: #89DDFF;">,</span><span> bar_count</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    for</span><span style="color: #9ABDF5;"> (</span><span style="color: #BB9AF7;">int</span><span> i </span><span style="color: #89DDFF;">=</span><span style="color: #FF9E64;"> 0</span><span style="color: #89DDFF;">;</span><span> i </span><span style="color: #BB9AF7;">&lt;</span><span> bar_count</span><span style="color: #89DDFF;">; ++</span><span>i</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">        // Compute foobar[i].</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    ComputeResult result </span><span style="color: #89DDFF;">=</span><span style="color: #9ABDF5;"> {}</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    foobar_result</span><span style="color: #9ABDF5;">(</span><span style="color: #BB9AF7;">&amp;</span><span>foobar</span><span style="color: #89DDFF;">,</span><span style="color: #BB9AF7;"> &amp;</span><span>result</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #7AA2F7;">    arena_restore_checkpoint</span><span style="color: #9ABDF5;">(</span><span>work_checkpoint</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;font-style: italic;">    return</span><span> result</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>If you don’t like the fact that you have to remember to restore the checkpoint, you can implement
+either a destructor for the checkpoint or add a <code>defer</code> macro that handles this.</p>
+</li>
+<li>
+<p><strong>Lifetime as a parameter.</strong> When using an arena allocator, you can mask from the callee the
+actual lifetime of the object they will allocate. The callee only has to know two things: does
+the object’s lifetime start and end within my scope (temporary work), or does it start in my
+scope and end in the caller’s?</p>
+<p>Consider, for instance, that you have an opaque pointer to the <code>GPUContext</code> of an application. The
+actual definition of <code>GPUContext</code> has to be deferred to their corresponding backend implementation
+file (e.g. <code>gpu_context_vulkan.cpp</code>) — hence the caller cannot simply instantiate <code>GPUContext</code>
+on the stack, it has to be allocated at runtime. In order to create a new GPU context, the caller
+passes an arena to <code>gpu_context_make</code> as the lifetime of the <code>GPUContext</code> itself:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="cpp"><span class="giallo-l"><span style="color: #C0CAF5;">GPUContext</span><span style="color: #9D7CD8;font-style: italic;"> *</span><span style="color: #7AA2F7;">gpu_context_make</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">Arena</span><span style="color: #9D7CD8;font-style: italic;"> *</span><span style="color: #E0AF68;">persistent_arena</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span>    GPUContext </span><span style="color: #89DDFF;">*</span><span>context </span><span style="color: #89DDFF;">=</span><span style="color: #9ABDF5;"> (</span><span>GPUContext </span><span style="color: #89DDFF;">*</span><span style="color: #9ABDF5;">)</span><span style="color: #7AA2F7;">arena_alloc_align</span><span style="color: #9ABDF5;">(</span><span>persistent_arena</span><span style="color: #89DDFF;">, sizeof</span><span style="color: #9ABDF5;">(</span><span>GPUContext</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">, alignof</span><span style="color: #9ABDF5;">(</span><span>GPUContext</span><span style="color: #9ABDF5;">))</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // Initialise the context ...</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;font-style: italic;">    return</span><span> context</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre></li>
+</ul>
+<h1 id="stack-allocator">Stack Allocator</h1>
+<p>A stack allocator is nothing more than a contiguous memory block which we divide in order to offer
+memory space to consumers. In order to avoid memory fragmentation, we only allow the last allocated
+block to be freed.</p>
+<h2 id="headers-storing-relevant-information">Headers: storing relevant information</h2>
+<p>Each memory block allocated by our stack allocator will be accompanied by a header that will carry
+some basic information about the memory block it’s associated with.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="cpp"><span class="giallo-l"><span style="color: #BB9AF7;">struct</span><span style="color: #C0CAF5;"> StackHeader</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span style="color: #9ABDF5;"> padding</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span style="color: #9ABDF5;"> capacity</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span style="color: #9ABDF5;"> previous_offset</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span><span style="color: #89DDFF;">;</span></span></code></pre>
+<p>Let me explain what each one of these fields mean:</p>
+<ul>
+<li><code>padding</code>: The offset relative to the <em>end</em> of the previously allocated memory block until the start
+of the current memory block. This is here due to the different alignment requirements of each block.</li>
+<li><code>capacity</code>: The total capacity, in bytes, of the current memory block.</li>
+<li><code>previous_offset</code>: The offset, relative to <code>buffer</code>, to the start of the previously allocated
+memory block. This allows us to traverse the stack backwards.</li>
+</ul>
+<p>You can visualise the header members as follows:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="markdown"><span class="giallo-l"><span style="color: #9AA5CE;">         previous offset              |alignment|              |------capacity------|</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">                |                     |         |              ^                    ^</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">                v                     v         v              |                    |</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">|</span><span style="color: #C0CEFC;">previous header</span><span style="color: #89DDFF;">|</span><span style="color: #C0CEFC;">previous memory block</span><span style="color: #89DDFF;">|</span><span style="color: #C0CEFC;">+++++++++</span><span style="color: #89DDFF;">|</span><span style="color: #C0CEFC;">current header</span><span style="color: #89DDFF;">|</span><span style="color: #C0CEFC;">current memory block</span><span style="color: #89DDFF;">|</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">                                      ^                        ^</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">                                      |---------padding--------|</span></span></code></pre><h2 id="allocator-structure">Allocator Structure</h2>
+<p>On to the stack allocator proper! The basic layout of the allocator looks like this:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="cpp"><span class="giallo-l"><span style="color: #BB9AF7;">struct</span><span style="color: #C0CAF5;"> Stack</span><span style="color: #9ABDF5;"> {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uint8_t</span><span style="color: #89DDFF;"> *</span><span style="color: #9ABDF5;">buffer</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span style="color: #9ABDF5;">   capacity</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span style="color: #9ABDF5;">   offset</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span style="color: #9ABDF5;">   previous_offset</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span><span style="color: #89DDFF;">;</span></span></code></pre>
+<ul>
+<li><code>buffer</code>: Pointer to the start of the memory block managed by the allocator.</li>
+<li><code>capacity</code>: The maximum capacity in bytes of the allocator’s memory block.</li>
+<li><code>offset</code>: The offset, relative to <code>buffer</code>, to the start of the region available for allocations.</li>
+<li><code>previous_offset</code>: The offset, relative to <code>buffer</code>, to the start of the last allocated memory block.</li>
+</ul>
+<p>This can be visualised by the following diagram:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="markdown"><span class="giallo-l"><span style="color: #9AA5CE;">                                         offset</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">                                           |</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">                                           v</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">  |header 1|memory 1|++++|header 2|memory 2|++free space++|</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">  ^                               ^                       ^</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">  |                               |                       |</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">buffer                         previous                  end</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">  |                             offset                    |</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">  |                                                       |</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">  |                                                       |</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">  |--------------------- capacity ------------------------|</span></span></code></pre>
+<p>The allocator can be either the owner or merely the manager of the memory pointed by <code>Stack::buffer</code>.
+In my case, I opted for using allocators as mere managers, so you need to initialise them with a
+valid pointer to a previously allocated block of memory.</p>
+<h2 id="allocating-blocks">Allocating Blocks</h2>
+<p>Each block provided by the stack allocator consists of an <em>alignment</em> offset with respect to the end
+of the previous block, a <em>header</em>, and the available block of <em>memory</em> requested by the user.</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="markdown"><span class="giallo-l"><span style="color: #9AA5CE;">      |alignment|    memory</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">      |         |      |</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">      v         v      v</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">|</span><span style="color: #C0CEFC;"> ...</span><span style="color: #89DDFF;"> |</span><span style="color: #C0CEFC;">+++++++++</span><span style="color: #89DDFF;">|</span><span style="color: #C0CEFC;">header</span><span style="color: #89DDFF;">|</span><span style="color: #C0CEFC;">memory block</span><span style="color: #89DDFF;">|</span><span style="color: #C0CEFC;"> ...</span><span style="color: #89DDFF;"> |</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">      ^                ^</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">      |                |</span></span>
+<span class="giallo-l"><span style="color: #9AA5CE;">      |----padding-----|</span></span></code></pre>
+<p>The block of memory is preceded by a <em>padding</em> that comprises both the alignment needed for the
+memory block and its corresponding header.</p>
+<p>In order to compute the padding needed by the block we can implement the following function:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="c"><span class="giallo-l"><span style="color: #BB9AF7;">size_t</span><span style="color: #7AA2F7;"> padding_with_header</span><span style="color: #9ABDF5;">(</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uintptr_t</span><span style="color: #E0AF68;"> ptr_addr</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span style="color: #E0AF68;">    alignment</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span style="color: #E0AF68;">    header_size</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span style="color: #E0AF68;">    header_alignment</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    if</span><span style="color: #9ABDF5;"> (alignment </span><span style="color: #BB9AF7;">&lt;</span><span style="color: #9ABDF5;"> header_alignment) {</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        alignment </span><span style="color: #89DDFF;">=</span><span style="color: #9ABDF5;"> header_alignment</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span style="color: #9ABDF5;"> padding </span><span style="color: #89DDFF;">=</span><span style="color: #FF9E64;"> 0</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uintptr_t</span><span style="color: #9ABDF5;"> mod_align </span><span style="color: #89DDFF;">=</span><span style="color: #9ABDF5;"> ptr_addr </span><span style="color: #89DDFF;">&amp;</span><span style="color: #9ABDF5;"> (alignment </span><span style="color: #89DDFF;">-</span><span style="color: #FF9E64;"> 1</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">;</span><span style="color: #51597D;font-style: italic;">  // Same as `ptr_addr % alignment`.</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    if</span><span style="color: #9ABDF5;"> (mod_align </span><span style="color: #BB9AF7;">!=</span><span style="color: #FF9E64;"> 0</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        padding </span><span style="color: #89DDFF;">=</span><span style="color: #9ABDF5;"> alignment </span><span style="color: #89DDFF;">-</span><span style="color: #9ABDF5;"> mod_align</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // Ensure there&#39;s enough space for the header before the block.</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    if</span><span style="color: #9ABDF5;"> (padding </span><span style="color: #BB9AF7;">&lt;</span><span style="color: #9ABDF5;"> header_size) {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">        size_t</span><span style="color: #9ABDF5;"> needed </span><span style="color: #89DDFF;">=</span><span style="color: #9ABDF5;"> header_size </span><span style="color: #89DDFF;">-</span><span style="color: #9ABDF5;"> padding</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        padding </span><span style="color: #89DDFF;">+=</span><span style="color: #9ABDF5;"> alignment </span><span style="color: #89DDFF;">*</span><span style="color: #9ABDF5;"> ((needed </span><span style="color: #89DDFF;">+</span><span style="color: #9ABDF5;"> alignment </span><span style="color: #89DDFF;">-</span><span style="color: #FF9E64;"> 1</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;"> /</span><span style="color: #9ABDF5;"> alignment)</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    return</span><span style="color: #9ABDF5;"> padding</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre>
+<p>It should be stressed that the <code>alignment</code> and <code>header_alignment</code> parameters should always be powers
+of two.</p>
+<p>To allocate a new block of memory in the stack, we can proceed as follows:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="cpp"><span class="giallo-l"><span style="color: #BB9AF7;">uint8_t</span><span style="color: #9D7CD8;font-style: italic;"> *</span><span style="color: #7AA2F7;">stack_alloc_align</span><span style="color: #9ABDF5;">(</span><span style="color: #C0CAF5;">Stack</span><span style="color: #9D7CD8;font-style: italic;"> *</span><span style="color: #E0AF68;">stack</span><span style="color: #89DDFF;">,</span><span style="color: #BB9AF7;"> size_t</span><span style="color: #E0AF68;"> size_bytes</span><span style="color: #89DDFF;">,</span><span style="color: #BB9AF7;"> uint32_t</span><span style="color: #E0AF68;"> alignment</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span> current_capacity </span><span style="color: #89DDFF;">=</span><span style="color: #C0CAF5;"> stack</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">capacity</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span> current_offset   </span><span style="color: #89DDFF;">=</span><span style="color: #C0CAF5;"> stack</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">offset</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    if</span><span style="color: #9ABDF5;"> (</span><span>current_capacity </span><span style="color: #BB9AF7;">==</span><span style="color: #FF9E64;"> 0</span><span style="color: #BB9AF7;"> ||</span><span> size_bytes </span><span style="color: #BB9AF7;">==</span><span style="color: #FF9E64;"> 0</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;font-style: italic;">        return</span><span style="color: #FF9E64;"> nullptr</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uint8_t</span><span style="color: #89DDFF;"> *</span><span>free_memory </span><span style="color: #89DDFF;">=</span><span style="color: #C0CAF5;"> stack</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">buffer</span><span style="color: #89DDFF;"> +</span><span> current_offset</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    size_t</span><span> padding </span><span style="color: #89DDFF;">=</span><span style="color: #7AA2F7;"> padding_with_header</span><span style="color: #9ABDF5;">(</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">        (</span><span style="color: #BB9AF7;">uintptr_t</span><span style="color: #9ABDF5;">)</span><span>free_memory</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span>        alignment</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        sizeof</span><span style="color: #9ABDF5;">(</span><span>StackHeader</span><span style="color: #9ABDF5;">)</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        alignof</span><span style="color: #9ABDF5;">(</span><span>StackHeader</span><span style="color: #9ABDF5;">))</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    if</span><span style="color: #9ABDF5;"> (</span><span>padding </span><span style="color: #89DDFF;">+</span><span> size_bytes </span><span style="color: #BB9AF7;">&gt;</span><span> current_capacity </span><span style="color: #89DDFF;">-</span><span> current_offset</span><span style="color: #9ABDF5;">) {</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;font-style: italic;">        return</span><span style="color: #FF9E64;"> nullptr</span><span style="color: #89DDFF;">;</span><span style="color: #51597D;font-style: italic;">  // Not enough memory...</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // Address to the start of the new block of memory.</span></span>
+<span class="giallo-l"><span style="color: #BB9AF7;">    uint8_t</span><span style="color: #89DDFF;"> *</span><span>new_block </span><span style="color: #89DDFF;">=</span><span> free_memory </span><span style="color: #89DDFF;">+</span><span> padding</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // Write to the header associated with the new block of memory.</span></span>
+<span class="giallo-l"><span>    StackHeader </span><span style="color: #89DDFF;">*</span><span>new_header     </span><span style="color: #89DDFF;">=</span><span style="color: #9ABDF5;"> (</span><span>StackHeader </span><span style="color: #89DDFF;">*</span><span style="color: #9ABDF5;">)(</span><span>new_block </span><span style="color: #89DDFF;">- sizeof</span><span style="color: #9ABDF5;">(</span><span>StackHeader</span><span style="color: #9ABDF5;">))</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    new_header</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">padding</span><span style="color: #89DDFF;">         =</span><span> padding</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    new_header</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">capacity</span><span style="color: #89DDFF;">        =</span><span> size_bytes</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    new_header</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">previous_offset</span><span style="color: #89DDFF;"> =</span><span style="color: #C0CAF5;"> stack</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">previous_offset</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #51597D;font-style: italic;">    // Update the stack offsets.</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    stack</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">previous_offset</span><span style="color: #89DDFF;"> =</span><span> current_offset </span><span style="color: #89DDFF;">+</span><span> padding</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    stack</span><span style="color: #89DDFF;">-&gt;</span><span style="color: #7DCFFF;">offset</span><span style="color: #89DDFF;">          =</span><span> current_offset </span><span style="color: #89DDFF;">+</span><span> padding </span><span style="color: #89DDFF;">+</span><span> size_bytes</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #BB9AF7;font-style: italic;">    return</span><span> new_block</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #9ABDF5;">}</span></span></code></pre><h1 id="final-comments">Final comments</h1>
+<p>Manual memory management systems are actually quite fun and interesting. It is very simple to
+construct a concise, easy to use, safe, and performant memory system that will remove most of the
+common headaches that arise from ad-hoc memory management. It goes without saying that having a good memory
+system frees you from dealing with individual lifetimes, ownership problems, and the paranoia that
+<code>malloc</code> will inherently generate when used throughout the codebase.</p>
+<p>Most of the time, all that you need is an arena. You can also combine the use of the arena with a
+stack allocator for more intricate memory arrangements.</p>
+<h1 id="further-reading-material-for-the-nerds">Further reading material for the nerds</h1>
+<ul>
+<li><a rel="external" href="https://www.memorymanagement.org/">Memory Management Reference</a>.</li>
+<li><a rel="external" href="https://www.rfleury.com/p/untangling-lifetimes-the-arena-allocator">Untangling Lifetimes: The Arena Allocator</a>,
+by Ryan Fleury.</li>
+<li><a rel="external" href="https://www.gingerbill.org/series/memory-allocation-strategies/">Memory Allocation Strategies series</a>, by gingerBill.</li>
+<li><a rel="external" href="https://floooh.github.io/2018/06/17/handles-vs-pointers.html">Handles are better than pointers</a>, by
+Andre Weissflog.</li>
+<li>Aaron MacDougall’s GDC 2016 talk on <a rel="external" href="https://gdcvault.com/play/1023309/Building-a-Low-Fragmentation-Memory">Building a Low-Fragmentation Memory System for 64-bit Games</a>.</li>
+</ul>
+
+  </div>
+  
+  <nav class="post-pager" aria-label="More posts">
+    <a class="post-pager__prev" rel="prev" href="https://operad.dev/2d-tqft-frobenius/">&larr; 2D Topological Quantum Field Theories and Commutative Frobenius Algebras</a>
+    <a class="post-pager__next" rel="next" href="https://operad.dev/mac5856/">MAC5856 — Road To The Linux Kernel &rarr;</a>
+  </nav>
+  
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <div class="container site-footer__inner">
+    <p>
+      &copy; 2026 Luiz Mugnaini
+      &middot; <a href="https://operad.dev/atom.xml">feed</a>
+      &middot; <a href="https://git.sr.ht/~luizmugnaini" rel="noopener">code</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

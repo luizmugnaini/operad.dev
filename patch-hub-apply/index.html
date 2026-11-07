@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+
+  <meta name="theme-color" content="#faf6ee" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14141a" media="(prefers-color-scheme: dark)">
+
+  <title>Contributing to patch-hub: Linux Kernel Development Workflow in the Terminal — operad.dev</title>
+
+  <meta name="description" content="Adding a single-patch apply feature to a TUI for browsing the Linux kernel mailing lists">
+  <meta name="author" content="Luiz Mugnaini">
+
+  <link rel="canonical" href="https://operad.dev/patch-hub-apply/">
+
+  
+  <meta property="og:title" content="Contributing to patch-hub: Linux Kernel Development Workflow in the Terminal">
+  <meta property="og:description" content="Adding a single-patch apply feature to a TUI for browsing the Linux kernel mailing lists">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://operad.dev/patch-hub-apply/">
+  <meta property="og:site_name" content="operad.dev">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:image" content="https://operad.dev/favicon_letter-512x512.png">
+
+  <link rel="stylesheet" href="https://operad.dev/main.css?h=bec186606d61b1230339">
+
+  <link rel="alternate" type="application/atom+xml" href="https://operad.dev/atom.xml" title="operad.dev">
+
+  <link rel="icon" type="image/png" href="/favicon_knot-192x192.png">
+
+  
+
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Contributing to patch-hub: Linux Kernel Development Workflow in the Terminal",
+    "description": "Adding a single-patch apply feature to a TUI for browsing the Linux kernel mailing lists",
+    "datePublished": "2026-06-10",
+    "dateModified": "2026-06-10",
+    "author": { "@type": "Person", "name": "Luiz Mugnaini" },
+    "publisher": { "@type": "Person", "name": "Luiz Mugnaini" },
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://operad.dev/patch-hub-apply/" },
+    "image": "https://operad.dev/favicon_letter-512x512.png"
+  }
+  </script>
+</head>
+
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+  <div class="container site-header__inner">
+    <a class="wordmark" href="https://operad.dev">
+      <img class="wordmark__icon" src="/favicon_knot-192x192.png" alt="" width="20" height="20">
+      operad.dev
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <ul><li><a href="https://operad.dev/">notes</a></li><li><a href="https://operad.dev/about/">about</a></li><li><a href="https://operad.dev/work/">work</a></li><li><a href="https://git.sr.ht/~luizmugnaini" target="_blank" rel="noopener noreferrer">code</a></li><li><a href="https://operad.dev/links/">links</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+  <main id="main" class="container content">
+    
+<article class="post">
+  <header class="post-header">
+    <h1 class="post-title">Contributing to patch-hub: Linux Kernel Development Workflow in the Terminal</h1>
+    
+<div class="post-meta">
+  <time datetime="2026-06-10">2026-06-10</time>
+  <span class="post-meta__tags">
+    <a class="tag" href="https://operad.dev/tags/kernel/">#kernel</a> 
+    <a class="tag" href="https://operad.dev/tags/linux/">#linux</a> 
+    <a class="tag" href="https://operad.dev/tags/programming/">#programming</a> 
+    <a class="tag" href="https://operad.dev/tags/rust/">#rust</a>
+  </span>
+</div>
+
+  </header>
+  <div class="prose">
+    <p>As part of <a href="/mac5856">MAC5856 Open Source Development class</a>, I started spending some time on
+<a rel="external" href="https://lore.kernel.org">lore.kernel.org</a>, the public archive of the Linux kernel mailing
+lists. The kernel development workflow normally follows these steps: find a patchset, read the
+thread in your browser or mail client, save the raw message somewhere, then drop into a terminal to
+actually apply it to a local tree — or at least that’s how I did things. This entails a lot of
+context switching for what is, conceptually, a very simple process.</p>
+<p><a rel="external" href="https://github.com/kworkflow/patch-hub"><code>patch-hub</code></a> is an attempt at simplifying that iteration
+loop into a single terminal application. This post covers what the tool is, the new patch-apply
+feature I just implemented, and how it’s laid internally.</p>
+<h2 id="what-is-patch-hub">What is patch-hub</h2>
+<p><code>patch-hub</code> is a terminal user interface, written in Rust, for browsing kernel mailing list
+patchsets. Rather than reimplementing the machinery of talking to a public-inbox archive, it wraps
+<a rel="external" href="https://public-inbox.org/"><code>lei</code></a> — the “local email interface” CLI from the public-inbox
+project.  <code>lei</code> does the job querying the lore website and fetching threads, while <code>patch-hub</code> works
+as the driver: parsing its JSON output, and rendering the results as a keyboard-navigable list of
+threads.</p>
+<p>A program that is similar in spirit to <code>patch-hub</code> is <a rel="external" href="https://github.com/mricon/b4"><code>b4</code></a>, which is
+a tool to help with email-based patch workflows and is backed by the <a rel="external" href="https://www.linuxfoundation.org/">Linux Foundation</a>.</p>
+<p>The day-to-day workflow in <code>patch-hub</code> looks like this:</p>
+<ul>
+<li>A <a rel="external" href="https://xapian.org/">Xapian</a> query is issued via <code>lei</code> in order to fetch messages from the lore
+website.</li>
+<li>The matching threads are parsed and shown in a list view for the user to browse.</li>
+<li>You navigate the list, open a thread, and step through the individual messages of a patchset.</li>
+</ul>
+<h2 id="the-cousin-pet-rub">The cousin, pet-rub</h2>
+<p>Currently, <code>patch-hub</code> is passing through an extensive rewrite of its internal systems and we’re
+considering an architecture that better aligns with the asynchronous actions required to drive this
+kind of patch-based workflow. As part of the rewrite, we’re testing a new implementation of the core
+loop based on the default <a rel="external" href="https://ratatui.rs/">ratatui</a> template. This rewrite is being maintained
+in a cousin project called <a rel="external" href="https://github.com/davidbtadokoro/pet-rub"><code>pet-rub</code></a>.</p>
+<p>Architecturally, the new version application is built around an async event loop with a small set of
+components that talk to each other exclusively through an <code>Action</code> message bus — they never call
+each other directly. A background task multiplexes terminal events and timer ticks into a channel;
+the main loop drains that channel, turns events into actions, dispatches to every component, and
+re-renders. This matters a lot for the feature below, because applying a patch is fundamentally an
+asynchronous, multi-stage operation, and the action bus is a good approach for coordinating it.</p>
+<p>Below, I’ll describe the <a rel="external" href="https://github.com/davidbtadokoro/pet-rub/pull/1">work I’ve done</a> for a
+new feature to the <code>pet-rub</code> codebase.</p>
+<h2 id="the-new-feature-apply-a-patch-with-one-keystroke">The new feature: apply a patch with one keystroke</h2>
+<p>A part of the development workflow that was missing in <code>pet-rub</code> was actually applying a given patch
+to a local copy of the kernel tree. Up to now, <code>pet-rub</code> could show you a patch, but you still had
+to leave the tool to do anything with it.</p>
+<p>For the new feature to work, you opt in by pointing <code>pet-rub</code> to a local kernel git repository:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #C0CAF5;">pet-rub</span><span style="color: #E0AF68;"> --kernel-tree</span><span> [path-to-a-kernel-tree]</span></span></code></pre>
+<p>The new <code>--kernel-tree &lt;path&gt;</code> CLI argument flows from <code>main</code> into <code>App::new</code>, which only pushes the
+new <code>Ktree</code> component onto the component vector when a path is actually provided. This is
+intentional and makes the new feature optional for the user.</p>
+<p>With a tree configured, the workflow becomes:</p>
+<ol start="0">
+<li>Fetch the mailing list content.</li>
+<li>Browse to a thread and step to the message you want.</li>
+<li>Press <code>a</code> to issue an “apply patch” action.</li>
+<li><code>pet-rub</code> downloads the raw patch from lore and runs <code>git am</code> against your tree.</li>
+<li>A small status popup appears in the top-right corner: a spinner while applying, then a
+confirmation showing the subject line of the newly created commit.</li>
+</ol>
+<p>If the patch doesn’t apply cleanly — which, with kernel patches against a moving tree, happens
+constantly — the popup displays the <code>git am</code>’s actual error message so that the developer can act
+upon it. From there you can press <code>x</code> to run <code>git am --abort</code>, which rolls the tree back to a clean
+state so a failed apply never leaves your repository mid-rebase.</p>
+<p>The whole component is gated behind the CLI flag <code>--kernel-tree</code>: if you don’t pass it, the apply
+machinery isn’t even instantiated, and <code>pet-rub</code> stays a pure read-only browser for the lore patches.</p>
+<h2 id="how-it-s-implemented">How it’s implemented</h2>
+<p>The implementation is split across two components and the action bus is reponsible for connecting
+them.</p>
+<h3 id="ktree-state-machine"><code>Ktree</code> state machine</h3>
+<p>The <code>Ktree</code> component owns a <code>LocalMode</code> enum that captures the current state of the kernel tree
+patch application process:</p>
+<pre class="giallo" style="color: #A9B1D6; background-color: #1A1B26;"><code data-lang="rust"><span class="giallo-l"><span style="color: #89DDFF;">pub</span><span style="color: #BB9AF7;"> enum</span><span style="color: #C0CAF5;"> LocalMode</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    Idle</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    Applying</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    Success</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    Failed</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #C0CAF5;">    Aborting</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>When it receives a <code>KtreeApply</code> action carrying the path to a downloaded <code>.mbox</code> file via the
+<code>Patchset</code> component, it transitions to <code>Applying</code> and spawns a <a rel="external" href="https://tokio.rs/">Tokio</a> task that
+runs <code>git am</code> in the kernel tree.</p>
+<p>The result of the patch application is reported back via a <code>KtreeStatus</code> over the same action bus
+rather than mutating state directly from the task, which is necessary due to the architectural
+constraints of the application.</p>
+<p>On success, the task runs a follow-up <code>git log -1 --format=%s</code> to grab the subject of the commit
+<code>git am</code> just created, and sends <code>KtreeResult(KtreeStatus::Success(subject))</code>. On failure it
+captures the standard error stream messages and sends
+<code>KtreeResult(KtreeStatus::Failed(stderr))</code>. The component’s <code>update()</code> handler catches these and
+flips the <code>Ktree</code> component <code>local_mode</code> accordingly, which is what drives the component rendering
+code. Afterwards, in both cases the temporarily downloaded <code>.mbox</code> file is deleted.</p>
+<p>The abort path is symmetric: pressing <code>x</code> while in <code>Failed</code> mode emits a <code>KtreeAbort</code> action, which
+spawns a task running <code>git am --abort</code> and reports back <code>KtreeStatus::Aborted</code> upon completion. The
+success notification auto-dismisses after a fixed number of ticks, so the popup doesn’t pollute the
+UI forever.</p>
+<h3 id="downloading-the-patch-in-the-patchsets-component">Downloading the patch in the <code>Patchsets</code> component</h3>
+<p>The <code>Patchsets</code> component is where you actually navigate threads, so that’s where the <code>a</code> keypress
+lives. The tricky part is that the patch has to be fetched from lore <em>before</em> it can be handed to
+<code>git am</code>. I kept this asynchronous to avoid blocking the UI while the user waits for the download to
+complete.</p>
+<p>When you press <code>a</code> on a message, the component looks up the message ID of the currently selected
+thread entry and spawns a download task. It immediately tells the <code>Ktree</code> component to set its local
+mode to the <code>Applying</code> state, then fetches the raw message with <code>curl</code> to a temporary file.</p>
+<p>The lore website exposes every message at a stable <code>/all/{message_id}/raw</code> URL, which has the mbox
+format, which <code>git am</code> supports by default. On a successful download the task fires a
+<code>KtreeApply(tmp_path)</code>, handing control over to the <code>Ktree</code> component described above. If the
+download itself fails, it short-circuits straight to a <code>KtreeResult(Failed(...))</code> so the error
+surfaces the same way an apply error would — and the <code>Ktree</code> draw method will be responsible for
+reporting the error back to the developer.</p>
+<p>A small <code>applying</code> guard flag prevents you from firing off a second apply while one is already in
+flight, and it’s cleared when the <code>KtreeResult</code> action comes back through the bus.</p>
+<p>This operation could’ve been done via <code>lei</code> just like we do when we fetch the patchsets. However,
+given that the <code>lei</code> project, as far as we know, is largely abandoned, we may want to pivot to our own
+implementation. This new feature already follows this idea and also goes to show how relatively easy
+it may be to replace the usage of <code>lei</code> in other places as well.</p>
+<h3 id="tests">Tests</h3>
+<p>Because <code>git am</code> behaviour is the whole point, I added integration tests with a patch example
+(<code>tests/fixtures/single_patch.mbox</code>). The tests create a throwaway git repository in a temporary
+directory and exercise the two paths that matter: a clean apply that produces the expected commit
+subject and file, and a deliberate conflict followed by <code>git am --abort</code> that confirms the tree
+returns to a clean state.</p>
+<h2 id="closing-thoughts">Closing thoughts</h2>
+<p>What I like about this feature is how little new conceptual surface it added. The component and
+action-bus design that was already in place did most of the work. A patch application is just a
+sequence of actions (<code>KtreeApply</code> then <code>KtreeResult</code>) flowing between two components, with Tokio
+tasks handling the <code>curl</code> and <code>git</code> calls off the main loop. The hard part wasn’t the concurrency;
+it was deciding what the <em>smallest</em> useful version of “apply a patch” looks like, and resisting the
+urge to build the whole kernel-workflow kitchen sink before shipping anything.</p>
+<p>The obvious next step is going beyond a single patch, applying an entire patchset in order, and
+eventually wiring up a build step so you can go from a thread on lore to a booted kernel without
+leaving the TUI.</p>
+
+  </div>
+  
+  <nav class="post-pager" aria-label="More posts">
+    <a class="post-pager__prev" rel="prev" href="https://operad.dev/mac5856/">&larr; MAC5856 — Road To The Linux Kernel</a>
+    <a class="post-pager__next" rel="next" href="https://operad.dev/include-graph/">Include Graph Tool, a Proof of Concept &rarr;</a>
+  </nav>
+  
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <div class="container site-footer__inner">
+    <p>
+      &copy; 2026 Luiz Mugnaini
+      &middot; <a href="https://operad.dev/atom.xml">feed</a>
+      &middot; <a href="https://git.sr.ht/~luizmugnaini" rel="noopener">code</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
