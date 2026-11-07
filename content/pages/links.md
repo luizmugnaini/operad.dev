@@ -49,6 +49,7 @@ prolific individuals, whose works touch diverse areas that won't be explicitly m
   applied category theory.
 - [Urs Schreiber](https://ncatlab.org/nlab/show/Urs+Schreiber) --- quantum physics and algebraic
   topology.
+- [James Milne](https://www.jmilne.org/) --- arithmetic geometry.
 
 ## Programming Blogs
 
